@@ -17,6 +17,7 @@ from weapon_optimizer import (
     calculate_total_stats,
     explore_pareto,
 )
+from i18n import t, language_selector, get_language
 
 # Page configuration
 st.set_page_config(
@@ -175,13 +176,13 @@ def display_mods_table(item_ids, item_lookup, show_price=True, constraints=None)
 
     if rows:
         if show_price:
-            header = "| | Name | Ergo | Recoil | Price | Source |"
+            header = f"| | {t('table.name')} | {t('table.ergo')} | {t('table.recoil')} | {t('table.price')} | {t('table.source')} |"
             separator = "|:---:|:-----|:----:|:------:|------:|:------:|"
             lines = [header, separator]
             for row in rows:
                 lines.append(f"| {row['icon']} | {row['name']} | {row['ergo']} | {row['recoil']} | {row['price']} | {row['source']} |")
         else:
-            header = "| | Name | Ergo | Recoil |"
+            header = f"| | {t('table.name')} | {t('table.ergo')} | {t('table.recoil')} |"
             separator = "|:---:|:-----|:----:|:------:|"
             lines = [header, separator]
             for row in rows:
@@ -193,11 +194,15 @@ def display_mods_table(item_ids, item_lookup, show_price=True, constraints=None)
 def display_optimization_results(result, item_lookup, weapon_stats, presets, selected_gun, constraints=None):
     """Display optimization results. Returns True if results were displayed."""
     if result["status"] == "infeasible":
-        st.error("No feasible solution found. Try adjusting constraints or budget.")
+        st.error(t("results.infeasible"))
         return False
 
+    status_key = f"results.{result['status']}" if result['status'] in ['optimal', 'feasible'] else "results.feasible"
+    status_text = t(status_key)
     status_icon = "✅" if result["status"] == "optimal" else "⚠️"
-    st.success(f"{status_icon} Optimization {result['status'].upper()}")
+    
+    # "Optimization OPTIMAL" or similar construction
+    st.success(f"{status_icon} {t('results.optimization_status')} {status_text}")
 
     selected_items = result["selected_items"]
     selected_preset = result.get("selected_preset")
@@ -206,7 +211,7 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
     final_stats = calculate_total_stats(weapon_stats, selected_items, item_lookup)
 
     # Display final stats
-    st.subheader("Final Stats")
+    st.subheader(t("results.final_stats"))
     col1, col2, col3, col4, col5 = st.columns(5)
 
     # Ergonomics
@@ -215,7 +220,7 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
     ergo_delta = raw_ergo - weapon_stats["naked_ergonomics"]
     with col1:
         st.metric(
-            "Ergonomics",
+            t("sidebar.ergonomics"),
             f"{capped_ergo:.0f}",
             f"{ergo_delta:+.0f}",
             help=f"Raw: {raw_ergo:.0f} (capped at 0-100). Delta from naked weapon.",
@@ -225,7 +230,7 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
     recoil_v_delta = final_stats["recoil_vertical"] - weapon_stats["naked_recoil_v"]
     with col2:
         st.metric(
-            "Recoil Vertical",
+            t("sidebar.recoil_v"),
             f"{final_stats['recoil_vertical']:.1f}",
             f"{recoil_v_delta:+.1f}",
             delta_color="inverse",
@@ -236,7 +241,7 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
     recoil_h_delta = final_stats["recoil_horizontal"] - weapon_stats["naked_recoil_h"]
     with col3:
         st.metric(
-            "Recoil Horizontal",
+            t("sidebar.recoil_h"),
             f"{final_stats['recoil_horizontal']:.1f}",
             f"{recoil_h_delta:+.1f}",
             delta_color="inverse",
@@ -248,11 +253,11 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
     weight_delta = final_stats["total_weight"] - base_weight
     with col4:
         st.metric(
-            "Total Weight",
-            f"{final_stats['total_weight']:.2f} kg",
-            f"{weight_delta:+.2f} kg",
+            t("results.total_weight"),
+            f"{final_stats['total_weight']:.2f} {t('units.kg')}",
+            f"{weight_delta:+.2f} {t('units.kg')}",
             delta_color="inverse",
-            help=f"Base weapon: {base_weight:.2f} kg",
+            help=f"Base weapon: {base_weight:.2f} {t('units.kg')}",
         )
 
     # Total Cost (including preset if selected, or naked gun + mods)
@@ -274,14 +279,14 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
 
     with col5:
         st.metric(
-            "Total Build Cost",
+            t("results.total_build_cost"),
             f"₽{total_cost:,}",
-            help="Total cost including weapon base and all modifications",
+            help=t("results.total_cost_help"),
         )
 
     # Display selected mods
     st.markdown("---")
-    st.subheader("Selected Build")
+    st.subheader(t("results.selected_build"))
 
     # Get preset info and items if preset was selected
     preset_info = None
@@ -292,11 +297,11 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
             preset_item_ids = set(preset_info.get("items", []))
 
     if selected_preset and preset_info:
-        st.markdown(f"**Preset:** {preset_info.get('name')}")
+        st.markdown(f"**{t('results.preset')}:** {preset_info.get('name')}")
         col1, col2 = st.columns([3, 1])
         with col1:
-            st.markdown(f"**Bundle Price:** ₽{preset_info.get('price', 0):,} ({preset_info.get('price_source', 'market')})")
-            st.markdown(f"**Includes:** {len(preset_item_ids)} items")
+            st.markdown(f"**{t('results.bundle_price')}:** ₽{preset_info.get('price', 0):,} ({preset_info.get('price_source', 'market')})")
+            st.markdown(f"**{t('results.includes')}:** {len(preset_item_ids)} items")
         with col2:
             if preset_info.get("image"):
                 st.image(preset_info["image"], width=150)
@@ -304,25 +309,25 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
         additional_items = [item_id for item_id in selected_items if item_id not in preset_item_ids]
         if additional_items:
             st.markdown("---")
-            st.markdown("**Additional Mods:**")
+            st.markdown(f"**{t('results.additional_mods')}:**")
             display_mods_table(additional_items, item_lookup, show_price=True, constraints=constraints)
 
-        with st.expander(f"Items in {preset_info.get('name')} preset", expanded=False):
+        with st.expander(t("results.items_in_preset", name=preset_info.get('name')), expanded=False):
             display_mods_table(preset_item_ids, item_lookup, show_price=False, constraints=constraints)
 
     elif selected_items:
-        st.markdown("**Naked Gun + Individual Mods**")
+        st.markdown(f"**{t('results.naked_gun_mods')}**")
 
         col1, col2 = st.columns([3, 1])
         with col1:
-            st.markdown(f"**Base Weapon:** {selected_gun['name']}")
+            st.markdown(f"**{t('results.base_weapon')}:** {selected_gun['name']}")
             weapon_price = weapon_stats.get('price', 0)
             weapon_source = weapon_stats.get('price_source', 'market')
 
             if weapon_source == "not_available":
-                st.markdown("**Price:** Not Available (presets only)")
+                st.markdown(f"**{t('sidebar.price')}:** {t('results.not_available')}")
             else:
-                st.markdown(f"**Price:** ₽{weapon_price:,} ({weapon_source})")
+                st.markdown(f"**{t('sidebar.price')}:** ₽{weapon_price:,} ({weapon_source})")
         with col2:
             weapon_image_url = weapon_stats.get("default_preset_image") or get_image_url(selected_gun, prefer_high_res=True)
             if weapon_image_url:
@@ -330,48 +335,56 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
 
         if selected_items:
             st.markdown("---")
-            st.markdown("**Additional Mods:**")
+            st.markdown(f"**{t('results.additional_mods')}:**")
             display_mods_table(selected_items, item_lookup, show_price=True, constraints=constraints)
     else:
-        st.markdown("**Naked Gun**")
+        st.markdown(f"**{t('results.naked_gun')}**")
         col1, col2 = st.columns([3, 1])
         with col1:
-            st.markdown(f"**Base Weapon:** {selected_gun['name']}")
+            st.markdown(f"**{t('results.base_weapon')}:** {selected_gun['name']}")
             weapon_price = weapon_stats.get('price', 0)
             weapon_source = weapon_stats.get('price_source', 'market')
 
             if weapon_source == "not_available":
-                st.markdown("**Price:** Not Available (presets only)")
+                st.markdown(f"**{t('sidebar.price')}:** {t('results.not_available')}")
             else:
-                st.markdown(f"**Price:** ₽{weapon_price:,} ({weapon_source})")
+                st.markdown(f"**{t('sidebar.price')}:** ₽{weapon_price:,} ({weapon_source})")
 
-            st.info("No modifications selected")
+            st.info(t("results.no_mods_selected"))
         with col2:
             weapon_image_url = weapon_stats.get("default_preset_image") or get_image_url(selected_gun, prefer_high_res=True)
             if weapon_image_url:
                 st.image(weapon_image_url, width=150)
 
     # Optimization details
-    with st.expander("Optimization Details"):
-        st.write(f"**Status:** {result['status']}")
-        st.write(f"**Objective Value:** {result['objective_value']:.0f}")
-        st.write(f"**Recoil Multiplier:** {final_stats['recoil_multiplier']:.4f}")
+    with st.expander(t("results.optimization_details")):
+        st.write(f"**{t('results.status')}:** {result['status']}")
+        st.write(f"**{t('results.objective_value')}:** {result['objective_value']:.0f}")
+        st.write(f"**{t('results.recoil_multiplier')}:** {final_stats['recoil_multiplier']:.4f}")
         if constraints:
             if constraints.get("max_price"):
-                st.write(f"**Budget Constraint:** ₽{constraints['max_price']:,}")
+                st.write(f"**{t('results.budget_constraint')}:** ₽{constraints['max_price']:,}")
             if constraints.get("min_ergonomics"):
-                st.write(f"**Min Ergonomics Constraint:** {constraints['min_ergonomics']}")
+                st.write(f"**{t('results.min_ergo_constraint')}:** {constraints['min_ergonomics']}")
             if constraints.get("max_recoil_v"):
-                st.write(f"**Max Recoil V Constraint:** {constraints['max_recoil_v']}")
+                st.write(f"**{t('results.max_recoil_constraint')}:** {constraints['max_recoil_v']}")
+            if constraints.get("min_mag_capacity"):
+                st.write(f"**{t('results.min_mag_constraint')}:** {constraints['min_mag_capacity']} {t('units.rounds')}")
+            if constraints.get("min_sighting_range"):
+                st.write(f"**{t('results.min_sight_constraint')}:** {constraints['min_sighting_range']}{t('units.meters')}")
+            if constraints.get("max_weight"):
+                st.write(f"**{t('results.max_weight_constraint')}:** {constraints['max_weight']:.1f} {t('units.kg')}")
             player_lvl = constraints.get("player_level")
             if player_lvl is not None:
-                st.write(f"**Player Level:** {player_lvl}")
+                st.write(f"**{t('sidebar.player_level')}:** {player_lvl}")
             trader_lvls = constraints.get("trader_levels", {})
             flea = constraints.get("flea_available", True)
             if trader_lvls:
                 levels_str = ", ".join([f"{k.capitalize()}: LL{v}" for k, v in trader_lvls.items()])
-                st.write(f"**Trader Levels:** {levels_str}")
-            st.write(f"**Flea Market:** {'Available' if flea else 'Not Available'}")
+                st.write(f"**{t('sidebar.trader_levels')}:** {levels_str}")
+            
+            flea_status = t('results.available') if flea else t('results.not_available_short')
+            st.write(f"**{t('results.flea_market')}:** {flea_status}")
 
     return True
 
@@ -489,6 +502,12 @@ def generate_build_export(result, item_lookup, weapon_stats, presets, selected_g
             md_lines.append(f"- Min Ergonomics: {constraints['min_ergonomics']}")
         if constraints.get("max_recoil_v"):
             md_lines.append(f"- Max Recoil V: {constraints['max_recoil_v']}")
+        if constraints.get("min_mag_capacity"):
+            md_lines.append(f"- Min Mag Capacity: {constraints['min_mag_capacity']} rounds")
+        if constraints.get("min_sighting_range"):
+            md_lines.append(f"- Min Sighting Range: {constraints['min_sighting_range']}m")
+        if constraints.get("max_weight"):
+            md_lines.append(f"- Max Weight: {constraints['max_weight']:.1f} kg")
         player_lvl = constraints.get("player_level")
         if player_lvl is not None:
             md_lines.append(f"- Player Level: {player_lvl}")
@@ -505,33 +524,38 @@ def generate_build_export(result, item_lookup, weapon_stats, presets, selected_g
 
 
 def main():
+    # Language selector at top of sidebar
+    with st.sidebar:
+        language_selector(label="🌐 Language")
+        st.markdown("---")
+
     # Title
-    st.title("🔫 Tarkov Weapon Mod Optimizer")
-    st.markdown("Optimize your weapon builds using constraint programming")
+    st.title(f"🔫 {t('app.title')}")
+    st.markdown(t("app.subtitle"))
 
     # Load data with status indicator
-    with st.status("Loading data...", expanded=False) as status:
+    with st.status(t("status.loading"), expanded=False) as status:
         try:
-            status.update(label="Fetching weapons and mods from API...")
+            status.update(label=t("status.fetching"))
             guns, mods = load_data()
-            status.update(label="Building item lookup...")
+            status.update(label=t("status.building_lookup"))
             item_lookup = build_lookup(guns, mods)
-            status.update(label=f"Loaded {len(guns)} guns and {len(mods)} mods", state="complete")
+            status.update(label=t("status.loaded", guns=len(guns), mods=len(mods)), state="complete")
         except Exception as e:
-            status.update(label="Failed to load data", state="error")
-            st.error(f"Failed to load data from API: {e}")
+            status.update(label=t("status.failed_load"), state="error")
+            st.error(f"{t('status.failed_load')}: {e}")
             st.stop()
 
-    # Sidebar: Weapon Selection only
-    st.sidebar.header("🔫 Select Weapon")
+    # Sidebar: Weapon Selection
+    st.sidebar.header(f"🔫 {t('sidebar.select_weapon')}")
 
     gun_options = {gun["name"]: gun for gun in guns}
     gun_names = sorted(gun_options.keys())
 
     selected_gun_name = st.sidebar.selectbox(
-        "Choose a weapon:",
+        t("sidebar.choose_weapon"),
         gun_names,
-        help="Select the base weapon to optimize",
+        help=t("sidebar.choose_weapon"),
     )
 
     selected_gun = gun_options[selected_gun_name]
@@ -545,14 +569,14 @@ def main():
         st.sidebar.image(weapon_image_url, width="stretch")
 
     # Show base weapon stats
-    st.sidebar.markdown("**Base Stats:**")
-    st.sidebar.markdown(f"- Ergonomics: {weapon_stats.get('naked_ergonomics', 0):.0f}")
-    st.sidebar.markdown(f"- Recoil V: {weapon_stats.get('naked_recoil_v', 0):.0f}")
-    st.sidebar.markdown(f"- Recoil H: {weapon_stats.get('naked_recoil_h', 0):.0f}")
+    st.sidebar.markdown(f"**{t('sidebar.base_stats')}**")
+    st.sidebar.markdown(f"- {t('sidebar.ergonomics')}: {weapon_stats.get('naked_ergonomics', 0):.0f}")
+    st.sidebar.markdown(f"- {t('sidebar.recoil_v')}: {weapon_stats.get('naked_recoil_v', 0):.0f}")
+    st.sidebar.markdown(f"- {t('sidebar.recoil_h')}: {weapon_stats.get('naked_recoil_h', 0):.0f}")
 
     # Show all presets info
     if presets:
-        with st.sidebar.expander(f"📦 Available Presets ({len(presets)})"):
+        with st.sidebar.expander(f"📦 {t('sidebar.available_presets')} ({len(presets)})"):
             for preset in presets:
                 preset_name = preset.get("name", "Unknown")
                 preset_price = preset.get("price", 0)
@@ -564,34 +588,34 @@ def main():
 
     # Player Level and Trader Settings
     st.sidebar.markdown("---")
-    st.sidebar.header("👤 Player & Trader Access")
+    st.sidebar.header(f"👤 {t('sidebar.player_trader_access')}")
 
     # Player level input
     player_level = st.sidebar.number_input(
-        "Player Level",
+        t("sidebar.player_level"),
         min_value=1,
         max_value=79,
         value=79,
-        help="Your PMC level. Affects which items are available on the Flea Market (each item has a minimum level requirement).",
+        help=t("sidebar.player_level_help"),
     )
 
     # Flea market access - automatically disabled if player level < 15
     flea_unlocked = player_level >= 15
     if flea_unlocked:
         flea_available = st.sidebar.checkbox(
-            "Flea Market Access",
+            t("sidebar.flea_market_access"),
             value=True,
-            help="Enable if you have access to the Flea Market. Items also have individual level requirements.",
+            help=t("sidebar.flea_help"),
         )
     else:
         flea_available = False
         st.sidebar.checkbox(
-            "Flea Market Access",
+            t("sidebar.flea_market_access"),
             value=False,
             disabled=True,
-            help="Flea Market unlocks at level 15.",
+            help=t("sidebar.flea_unlocks_at_15"),
         )
-        st.sidebar.caption("⚠️ Flea Market unlocks at level 15")
+        st.sidebar.caption(f"⚠️ {t('sidebar.flea_unlocks_at_15')}")
 
     # Define traders with display names (only those who sell weapon mods)
     traders = [
@@ -612,14 +636,14 @@ def main():
     trader_levels = {key: st.session_state[f"trader_{key}"] for key, _ in traders}
 
     # Individual trader levels in an expander
-    with st.sidebar.expander("Trader Levels", expanded=False):
+    with st.sidebar.expander(t("sidebar.trader_levels"), expanded=False):
         # Quick preset buttons
         preset_col1, preset_col2 = st.columns(2)
-        if preset_col1.button("All LL1", key="traders_ll1", use_container_width=True):
+        if preset_col1.button(t("sidebar.all_ll1"), key="traders_ll1", use_container_width=True):
             for trader_key, _ in traders:
                 st.session_state[f"trader_{trader_key}"] = 1
             st.rerun()
-        if preset_col2.button("All LL4", key="traders_ll4", use_container_width=True):
+        if preset_col2.button(t("sidebar.all_ll4"), key="traders_ll4", use_container_width=True):
             for trader_key, _ in traders:
                 st.session_state[f"trader_{trader_key}"] = 4
             st.rerun()
@@ -641,133 +665,201 @@ def main():
     if non_maxed or not flea_available or player_level < 79:
         constraints_info = []
         if player_level < 79:
-            constraints_info.append(f"level {player_level}")
+            constraints_info.append(t("sidebar.level", level=player_level))
         if non_maxed:
-            constraints_info.append(f"{len(non_maxed)} traders below LL4")
+            constraints_info.append(t("sidebar.traders_below_ll4", count=len(non_maxed)))
         if not flea_available:
-            constraints_info.append("no flea")
-        st.sidebar.caption(f"⚠️ Limited: {', '.join(constraints_info)}")
+            constraints_info.append(t("sidebar.no_flea"))
+        st.sidebar.caption(f"⚠️ {t('sidebar.limited')}: {', '.join(constraints_info)}")
+
+    st.sidebar.markdown("---")
+    
+    # Hard Constraints Sidebar Section
+    with st.sidebar.expander(f"🛡️ {t('optimize.constraints_header')}", expanded=False):
+        # Budget constraint
+        enable_budget = st.checkbox(t("constraints.budget_limit"), key="sb_budget_check")
+        max_price = None
+        if enable_budget:
+            max_price = st.number_input(
+                t("constraints.max_budget"),
+                min_value=0,
+                max_value=10000000,
+                value=500000,
+                step=50000,
+                help=t("constraints.max_budget_help"),
+                key="sb_max_price",
+            )
+
+        # Minimum ergonomics constraint
+        enable_min_ergo = st.checkbox(t("constraints.min_ergonomics"), key="sb_ergo_check")
+        min_ergonomics = None
+        if enable_min_ergo:
+            min_ergonomics = st.slider(
+                t("constraints.min_ergo"),
+                min_value=0,
+                max_value=100,
+                value=50,
+                help=t("constraints.min_ergo_help"),
+                key="sb_min_ergo",
+            )
+
+        # Maximum recoil constraint
+        enable_max_recoil = st.checkbox(t("constraints.max_recoil"), key="sb_recoil_check")
+        max_recoil_v = None
+        if enable_max_recoil:
+            naked_recoil = weapon_stats.get("naked_recoil_v", 100)
+            max_recoil_v = st.slider(
+                t("constraints.max_recoil_v"),
+                min_value=20,
+                max_value=int(naked_recoil),
+                value=int(naked_recoil * 0.7),
+                help=t("constraints.max_recoil_help", naked=f"{naked_recoil:.0f}"),
+                key="sb_max_recoil",
+            )
+
+        # Minimum magazine capacity constraint
+        enable_min_mag = st.checkbox(t("constraints.min_mag_capacity"), key="sb_mag_check")
+        min_mag_capacity = None
+        if enable_min_mag:
+            min_mag_capacity = st.number_input(
+                t("constraints.min_mag"),
+                min_value=5,
+                max_value=100,
+                value=30,
+                step=5,
+                help=t("constraints.min_mag_help"),
+                key="sb_min_mag",
+            )
+
+        # Minimum sighting range constraint
+        enable_min_sight = st.checkbox(t("constraints.min_sighting_range"), key="sb_sight_check")
+        min_sighting_range = None
+        if enable_min_sight:
+            min_sighting_range = st.number_input(
+                t("constraints.min_sight"),
+                min_value=50,
+                max_value=1000,
+                value=200,
+                step=50,
+                help=t("constraints.min_sight_help"),
+                key="sb_min_sight",
+            )
+
+        # Maximum weight constraint
+        enable_max_weight = st.checkbox(t("constraints.max_weight"), key="sb_weight_check")
+        max_weight = None
+        if enable_max_weight:
+            base_weight = weapon_stats.get("weight", 3.0)
+            max_weight = st.number_input(
+                t("constraints.max_weight_kg"),
+                min_value=1.0,
+                max_value=15.0,
+                value=round(base_weight + 3.0, 1),
+                step=0.5,
+                format="%.1f",
+                help=t("constraints.max_weight_help", base=f"{base_weight:.2f}"),
+                key="sb_max_weight",
+            )
 
     # Create tabs for Explore and Optimize
-    tab_explore, tab_optimize = st.tabs(["📊 Explore Trade-offs", "🚀 Optimize Build"])
+    tab_explore, tab_optimize = st.tabs([f"📊 {t('tabs.explore')}", f"🚀 {t('tabs.optimize')}"])
 
     # ==================== EXPLORE TAB ====================
     with tab_explore:
-        st.header("Explore Trade-off Curves")
-        st.markdown("Discover the Pareto frontier to understand what's achievable before optimizing.")
+        st.header(t("explore.header"))
+        st.markdown(t("explore.description"))
 
-        # Exploration settings in columns
-        col1, col2 = st.columns([2, 1])
-        with col1:
-            explore_tradeoff = st.selectbox(
-                "Trade-off to explore:",
-                ["Ergo vs Recoil (ignore price)", "Ergo vs Price (ignore recoil)", "Recoil vs Price (ignore ergo)"],
-                help="Select which two dimensions to explore",
-            )
-
-        # Constraints for exploration
-        st.subheader("Constraints (optional)")
-        exp_col1, exp_col2, exp_col3 = st.columns(3)
-
-        with exp_col1:
-            exp_enable_budget = st.checkbox("Budget Limit", key="exp_budget_check")
-            exp_max_price = None
-            if exp_enable_budget:
-                exp_max_price = st.number_input(
-                    "Max Budget (₽)",
-                    min_value=0,
-                    max_value=10000000,
-                    value=500000,
-                    step=50000,
-                    key="exp_max_price",
-                )
-
-        with exp_col2:
-            exp_enable_min_ergo = st.checkbox("Min Ergonomics", key="exp_ergo_check")
-            exp_min_ergo = None
-            if exp_enable_min_ergo:
-                exp_min_ergo = st.slider("Min Ergo", 0, 100, 50, key="exp_min_ergo")
-
-        with exp_col3:
-            naked_recoil = weapon_stats.get("naked_recoil_v", 100)
-            exp_enable_max_recoil = st.checkbox("Max Recoil", key="exp_recoil_check")
-            exp_max_recoil = None
-            if exp_enable_max_recoil:
-                exp_max_recoil = st.slider("Max Recoil V", 20, int(naked_recoil), int(naked_recoil * 0.7), key="exp_max_recoil")
+        explore_tradeoff = st.selectbox(
+            t("explore.tradeoff_label"),
+            [t("explore.ergo_vs_recoil"), t("explore.ergo_vs_price"), t("explore.recoil_vs_price")],
+            help=t("explore.tradeoff_label"),
+        )
+        
+        st.markdown("---")
 
         # Explore button
-        explore_button = st.button("📊 Explore Trade-offs", type="primary", key="explore_btn")
+        explore_button = st.button(f"📊 {t('explore.explore_btn')}", type="primary", key="explore_btn", width="stretch")
 
         if explore_button:
-            with st.status("Exploring trade-offs...", expanded=True) as status:
+            with st.status(t("status.exploring"), expanded=True) as status:
                 # Build compatibility map (cached per weapon)
                 try:
-                    status.update(label="Building compatibility map...")
+                    status.update(label=t("status.building_compat"))
                     compat_map = get_compat_map(weapon_id, item_lookup)
-                    st.write(f"✓ Found {len(compat_map['reachable_items'])} compatible mods")
+                    st.write(f"✓ {t('status.found_mods', count=len(compat_map['reachable_items']))}")
                 except Exception as e:
-                    status.update(label="Failed", state="error")
-                    st.error(f"Failed to build compatibility map: {e}")
+                    status.update(label=t("status.failed"), state="error")
+                    st.error(f"{t('status.failed_compat')}: {e}")
                     st.stop()
 
                 try:
                     ignore_map = {
-                        "Ergo vs Recoil (ignore price)": "price",
-                        "Ergo vs Price (ignore recoil)": "recoil",
-                        "Recoil vs Price (ignore ergo)": "ergo",
+                        t("explore.ergo_vs_recoil"): "price",
+                        t("explore.ergo_vs_price"): "recoil",
+                        t("explore.recoil_vs_price"): "ergo",
                     }
-                    status.update(label="Running optimization passes...")
-                    st.write("✓ Sampling Pareto frontier (8 points)...")
+                    status.update(label=t("status.running_passes"))
+                    st.write(f"✓ {t('status.sampling', points=8)}")
                     frontier = explore_pareto(
                         weapon_id,
                         item_lookup,
                         compat_map,
                         ignore=ignore_map[explore_tradeoff],
-                        max_price=exp_max_price,
-                        min_ergonomics=exp_min_ergo,
-                        max_recoil_v=exp_max_recoil,
+                        max_price=max_price,
+                        min_ergonomics=min_ergonomics,
+                        max_recoil_v=max_recoil_v,
+                        min_mag_capacity=min_mag_capacity,
+                        min_sighting_range=min_sighting_range,
+                        max_weight=max_weight,
                         steps=8,
                         trader_levels=trader_levels,
                         flea_available=flea_available,
                         player_level=player_level,
                     )
-                    status.update(label="Exploration complete", state="complete")
+                    status.update(label=t("status.exploration_complete"), state="complete")
                 except Exception as e:
-                    status.update(label="Exploration failed", state="error")
-                    st.error(f"Exploration failed: {e}")
+                    status.update(label=t("status.exploration_failed"), state="error")
+                    st.error(f"{t('status.exploration_failed')}: {e}")
                     st.stop()
 
             if not frontier:
-                st.error("No feasible builds found within constraints.")
+                st.error(t("explore.no_feasible"))
             else:
                 ignore = ignore_map[explore_tradeoff]
 
                 if ignore == "price":
-                    chart_x, chart_y = "Ergonomics", "Recoil V"
+                    chart_x, chart_y = t("chart.ergonomics"), t("chart.recoil_v")
                     x_data = [p["ergo"] for p in frontier]
                     y_data = [p["recoil_v"] for p in frontier]
-                    tip = "Each row shows the best recoil at that ergo level."
+                    tip = t("explore.tip_recoil_at_ergo")
                 elif ignore == "recoil":
-                    chart_x, chart_y = "Ergonomics", "Price (₽)"
+                    chart_x, chart_y = t("chart.ergonomics"), t("chart.price")
                     x_data = [p["ergo"] for p in frontier]
                     y_data = [p["price"] for p in frontier]
-                    tip = "Each row shows the lowest price at that ergo level."
+                    tip = t("explore.tip_price_at_ergo")
                 else:
-                    chart_x, chart_y = "Recoil V", "Price (₽)"
+                    chart_x, chart_y = t("chart.recoil_v"), t("chart.price")
                     x_data = [p["recoil_v"] for p in frontier]
                     y_data = [p["price"] for p in frontier]
-                    tip = "Each row shows the lowest price at that recoil level."
+                    tip = t("explore.tip_price_at_recoil")
 
                 # Show active constraints
                 constraints = []
-                if exp_max_price:
-                    constraints.append(f"Budget ≤ ₽{exp_max_price:,}")
-                if exp_min_ergo:
-                    constraints.append(f"Ergo ≥ {exp_min_ergo}")
-                if exp_max_recoil:
-                    constraints.append(f"Recoil V ≤ {exp_max_recoil}")
+                if max_price:
+                    constraints.append(t("constraints.budget_le", value=f"{max_price:,}"))
+                if min_ergonomics:
+                    constraints.append(t("constraints.ergo_ge", value=min_ergonomics))
+                if max_recoil_v:
+                    constraints.append(t("constraints.recoil_le", value=max_recoil_v))
+                if min_mag_capacity:
+                    constraints.append(f"{t('constraints.min_mag')}: {min_mag_capacity}")
+                if min_sighting_range:
+                    constraints.append(f"{t('constraints.min_sight')}: {min_sighting_range}")
+                if max_weight:
+                    constraints.append(f"{t('constraints.max_weight')}: {max_weight}")
+
                 if constraints:
-                    st.info(f"Active constraints: {', '.join(constraints)}")
+                    st.info(f"{t('explore.active_constraints')}: {', '.join(constraints)}")
 
                 # Line chart
                 chart_df = pd.DataFrame({chart_x: x_data, chart_y: y_data})
@@ -779,13 +871,19 @@ def main():
                 st.altair_chart(chart, width="stretch")
 
                 # Display as sortable table
+                col_ergo = t("table.ergo")
+                col_recoil_pct = t("table.recoil_pct")
+                col_recoil_v = t("table.recoil_v")
+                col_recoil_h = t("table.recoil_h")
+                col_price = t("table.price")
+
                 frontier_df = pd.DataFrame([
                     {
-                        "Ergo": point["ergo"],
-                        "Recoil %": f"{point['recoil_pct']:+.1f}%",
-                        "Recoil V": round(point["recoil_v"], 1),
-                        "Recoil H": round(point["recoil_h"], 1),
-                        "Price": point["price"],
+                        col_ergo: point["ergo"],
+                        col_recoil_pct: f"{point['recoil_pct']:+.1f}%",
+                        col_recoil_v: round(point["recoil_v"], 1),
+                        col_recoil_h: round(point["recoil_h"], 1),
+                        col_price: point["price"],
                     }
                     for point in frontier
                 ])
@@ -793,11 +891,11 @@ def main():
                 st.dataframe(
                     frontier_df,
                     column_config={
-                        "Ergo": st.column_config.NumberColumn("Ergo", format="%d"),
-                        "Recoil %": st.column_config.TextColumn("Recoil %"),
-                        "Recoil V": st.column_config.NumberColumn("Recoil V", format="%.1f"),
-                        "Recoil H": st.column_config.NumberColumn("Recoil H", format="%.1f"),
-                        "Price": st.column_config.NumberColumn("Price", format="₽%,d"),
+                        col_ergo: st.column_config.NumberColumn(col_ergo, format="%d"),
+                        col_recoil_pct: st.column_config.TextColumn(col_recoil_pct),
+                        col_recoil_v: st.column_config.NumberColumn(col_recoil_v, format="%.1f"),
+                        col_recoil_h: st.column_config.NumberColumn(col_recoil_h, format="%.1f"),
+                        col_price: st.column_config.NumberColumn(col_price, format="₽%,d"),
                     },
                     hide_index=True,
                     width="stretch",
@@ -807,201 +905,158 @@ def main():
 
     # ==================== OPTIMIZE TAB ====================
     with tab_optimize:
-        st.header("Optimize Your Build")
+        st.header(t("optimize.header"))
 
-        # Two columns: Weights on left, Constraints on right
-        opt_col1, opt_col2 = st.columns(2)
+        st.subheader(t("optimize.weights_header"))
 
-        with opt_col1:
-            st.subheader("Optimization Weights")
+        # Initialize weights in session state if not present
+        if "weight_ergo" not in st.session_state:
+            st.session_state.weight_ergo = 33
+        if "weight_recoil" not in st.session_state:
+            st.session_state.weight_recoil = 67
+        if "weight_price" not in st.session_state:
+            st.session_state.weight_price = 0
 
-            # Initialize weights in session state if not present
-            if "weight_ergo" not in st.session_state:
-                st.session_state.weight_ergo = 33
-            if "weight_recoil" not in st.session_state:
-                st.session_state.weight_recoil = 67
-            if "weight_price" not in st.session_state:
-                st.session_state.weight_price = 0
+        # Preset buttons
+        preset_cols = st.columns(4)
+        if preset_cols[0].button(t("optimize.preset_ergo"), help=t("optimize.preset_ergo_help"), key="preset_ergo"):
+            st.session_state.weight_ergo = 98
+            st.session_state.weight_recoil = 1
+            st.session_state.weight_price = 1
+            st.rerun()
+        if preset_cols[1].button(t("optimize.preset_recoil"), help=t("optimize.preset_recoil_help"), key="preset_recoil"):
+            st.session_state.weight_ergo = 1
+            st.session_state.weight_recoil = 98
+            st.session_state.weight_price = 1
+            st.rerun()
+        if preset_cols[2].button(t("optimize.preset_price"), help=t("optimize.preset_price_help"), key="preset_price"):
+            st.session_state.weight_ergo = 1
+            st.session_state.weight_recoil = 1
+            st.session_state.weight_price = 98
+            st.rerun()
+        if preset_cols[3].button(t("optimize.preset_balanced"), help=t("optimize.preset_balanced_help"), key="preset_balanced"):
+            st.session_state.weight_ergo = 34
+            st.session_state.weight_recoil = 33
+            st.session_state.weight_price = 33
+            st.rerun()
 
-            # Preset buttons
-            preset_cols = st.columns(3)
-            if preset_cols[0].button("Ergo", help="Pure ergonomics", key="preset_ergo"):
-                st.session_state.weight_ergo = 100
-                st.session_state.weight_recoil = 0
-                st.session_state.weight_price = 0
-                st.rerun()
-            if preset_cols[1].button("Recoil", help="Pure recoil", key="preset_recoil"):
-                st.session_state.weight_ergo = 0
-                st.session_state.weight_recoil = 100
-                st.session_state.weight_price = 0
-                st.rerun()
-            if preset_cols[2].button("Price", help="Pure price", key="preset_price"):
-                st.session_state.weight_ergo = 0
-                st.session_state.weight_recoil = 0
-                st.session_state.weight_price = 100
-                st.rerun()
+        # Get current weights from session state
+        w_ergo = st.session_state.weight_ergo
+        w_recoil = st.session_state.weight_recoil
+        w_price = st.session_state.weight_price
 
-            # Get current weights from session state
-            w_ergo = st.session_state.weight_ergo
-            w_recoil = st.session_state.weight_recoil
-            w_price = st.session_state.weight_price
+        # Create ternary plot
+        fig = go.Figure()
 
-            # Create ternary plot
-            fig = go.Figure()
+        # Generate clickable grid points
+        grid_a, grid_b, grid_c = [], [], []
+        for a in range(0, 101, 10):
+            for b in range(0, 101 - a, 10):
+                c = 100 - a - b
+                grid_a.append(a)
+                grid_b.append(b)
+                grid_c.append(c)
 
-            # Generate clickable grid points
-            grid_a, grid_b, grid_c = [], [], []
-            for a in range(0, 101, 10):
-                for b in range(0, 101 - a, 10):
-                    c = 100 - a - b
-                    grid_a.append(a)
-                    grid_b.append(b)
-                    grid_c.append(c)
+        # Add clickable grid
+        fig.add_trace(go.Scatterternary(
+            a=grid_a,
+            b=grid_b,
+            c=grid_c,
+            mode='markers',
+            marker=dict(size=8, color='lightgray', opacity=0.3),
+            hovertemplate=f"{t('optimize.preset_ergo')}: %{{a}}%<br>{t('optimize.preset_recoil')}: %{{b}}%<br>{t('optimize.preset_price')}: %{{c}}%<extra></extra>",
+            showlegend=False,
+        ))
 
-            # Add clickable grid
-            fig.add_trace(go.Scatterternary(
-                a=grid_a,
-                b=grid_b,
-                c=grid_c,
-                mode='markers',
-                marker=dict(size=8, color='lightgray', opacity=0.3),
-                hovertemplate="Ergo: %{a}%<br>Recoil: %{b}%<br>Price: %{c}%<extra></extra>",
-                showlegend=False,
-            ))
+        # Add current position marker
+        fig.add_trace(go.Scatterternary(
+            a=[w_ergo],
+            b=[w_recoil],
+            c=[w_price],
+            mode='markers',
+            marker=dict(size=18, color='red', symbol='circle', line=dict(width=2, color='white')),
+            name='Current',
+            hovertemplate=f"<b>Current</b><br>{t('optimize.preset_ergo')}: %{{a}}%<br>{t('optimize.preset_recoil')}: %{{b}}%<br>{t('optimize.preset_price')}: %{{c}}%<extra></extra>",
+        ))
 
-            # Add current position marker
-            fig.add_trace(go.Scatterternary(
-                a=[w_ergo],
-                b=[w_recoil],
-                c=[w_price],
-                mode='markers',
-                marker=dict(size=18, color='red', symbol='circle', line=dict(width=2, color='white')),
-                name='Current',
-                hovertemplate="<b>Current</b><br>Ergo: %{a}%<br>Recoil: %{b}%<br>Price: %{c}%<extra></extra>",
-            ))
+        # Add corner labels
+        fig.add_trace(go.Scatterternary(
+            a=[100, 0, 0],
+            b=[0, 100, 0],
+            c=[0, 0, 100],
+            mode='text',
+            text=[t("optimize.preset_ergo"), t("optimize.preset_recoil"), t("optimize.preset_price")],
+            textposition=['top center', 'bottom left', 'bottom right'],
+            textfont=dict(size=11, color='gray'),
+            showlegend=False,
+            hoverinfo='skip',
+        ))
 
-            # Add corner labels
-            fig.add_trace(go.Scatterternary(
-                a=[100, 0, 0],
-                b=[0, 100, 0],
-                c=[0, 0, 100],
-                mode='text',
-                text=['Ergo', 'Recoil', 'Price'],
-                textposition=['top center', 'bottom left', 'bottom right'],
-                textfont=dict(size=11, color='gray'),
-                showlegend=False,
-                hoverinfo='skip',
-            ))
+        fig.update_layout(
+            ternary=dict(
+                sum=100,
+                aaxis=dict(title="", showticklabels=False, linewidth=1),
+                baxis=dict(title="", showticklabels=False, linewidth=1),
+                caxis=dict(title="", showticklabels=False, linewidth=1),
+            ),
+            showlegend=False,
+            margin=dict(l=30, r=30, t=30, b=10),
+            height=280,
+        )
 
-            fig.update_layout(
-                ternary=dict(
-                    sum=100,
-                    aaxis=dict(title="", showticklabels=False, linewidth=1),
-                    baxis=dict(title="", showticklabels=False, linewidth=1),
-                    caxis=dict(title="", showticklabels=False, linewidth=1),
-                ),
-                showlegend=False,
-                margin=dict(l=30, r=30, t=30, b=10),
-                height=280,
-            )
+        # Display chart with click selection
+        event = st.plotly_chart(
+            fig,
+            width="stretch",
+            on_select="rerun",
+            selection_mode="points",
+            key="ternary_weights",
+        )
 
-            # Display chart with click selection
-            event = st.plotly_chart(
-                fig,
-                width="stretch",
-                on_select="rerun",
-                selection_mode="points",
-                key="ternary_weights",
-            )
+        # Handle click events
+        if event and event.selection and event.selection.get("points"):
+            point = event.selection["points"][0]
+            if "a" in point and "b" in point and "c" in point:
+                new_a = round(point["a"])
+                new_b = round(point["b"])
+                new_c = round(point["c"])
+                if (new_a, new_b, new_c) != (w_ergo, w_recoil, w_price):
+                    st.session_state.weight_ergo = new_a
+                    st.session_state.weight_recoil = new_b
+                    st.session_state.weight_price = new_c
+                    st.rerun()
 
-            # Handle click events
-            if event and event.selection and event.selection.get("points"):
-                point = event.selection["points"][0]
-                if "a" in point and "b" in point and "c" in point:
-                    new_a = round(point["a"])
-                    new_b = round(point["b"])
-                    new_c = round(point["c"])
-                    if (new_a, new_b, new_c) != (w_ergo, w_recoil, w_price):
-                        st.session_state.weight_ergo = new_a
-                        st.session_state.weight_recoil = new_b
-                        st.session_state.weight_price = new_c
-                        st.rerun()
+        st.caption(f"{t('optimize.preset_ergo')}: {w_ergo}% | {t('optimize.preset_recoil')}: {w_recoil}% | {t('optimize.preset_price')}: {w_price}%")
 
-            st.caption(f"Ergo: {w_ergo}% | Recoil: {w_recoil}% | Price: {w_price}%")
-
-            # Convert percentages to weights
-            total = w_ergo + w_recoil + w_price
-            if total > 0:
-                ergo_weight = (w_ergo / 100) * 2
-                recoil_weight = (w_recoil / 100) * 2
-                price_weight = (w_price / 100) * 2
-            else:
-                ergo_weight, recoil_weight, price_weight = 1.0, 1.0, 0.0
-
-        with opt_col2:
-            st.subheader("Constraints")
-
-            # Budget constraint
-            enable_budget = st.checkbox("Budget Limit", key="opt_budget_check")
-            max_price = None
-            if enable_budget:
-                max_price = st.number_input(
-                    "Max Budget (₽)",
-                    min_value=0,
-                    max_value=10000000,
-                    value=500000,
-                    step=50000,
-                    help="Maximum total build cost",
-                    key="opt_max_price",
-                )
-
-            # Minimum ergonomics constraint
-            enable_min_ergo = st.checkbox("Minimum Ergonomics", key="opt_ergo_check")
-            min_ergonomics = None
-            if enable_min_ergo:
-                min_ergonomics = st.slider(
-                    "Min Ergo",
-                    min_value=0,
-                    max_value=100,
-                    value=50,
-                    help="Minimum final ergonomics required",
-                    key="opt_min_ergo",
-                )
-
-            # Maximum recoil constraint
-            enable_max_recoil = st.checkbox("Maximum Recoil", key="opt_recoil_check")
-            max_recoil_v = None
-            if enable_max_recoil:
-                naked_recoil = weapon_stats.get("naked_recoil_v", 100)
-                max_recoil_v = st.slider(
-                    "Max Recoil V",
-                    min_value=20,
-                    max_value=int(naked_recoil),
-                    value=int(naked_recoil * 0.7),
-                    help=f"Maximum final vertical recoil (naked: {naked_recoil:.0f})",
-                    key="opt_max_recoil",
-                )
+        # Convert percentages to weights
+        total = w_ergo + w_recoil + w_price
+        if total > 0:
+            ergo_weight = (w_ergo / 100) * 2
+            recoil_weight = (w_recoil / 100) * 2
+            price_weight = (w_price / 100) * 2
+        else:
+            ergo_weight, recoil_weight, price_weight = 1.0, 1.0, 0.0
 
         # Optimize button
         st.markdown("---")
-        optimize_button = st.button("🚀 Optimize Build", type="primary", key="optimize_btn", width="stretch")
+        optimize_button = st.button(f"🚀 {t('optimize.optimize_btn')}", type="primary", key="optimize_btn", width="stretch")
 
         if optimize_button:
-            with st.status("Optimizing build...", expanded=True) as status:
+            with st.status(t("status.optimizing"), expanded=True) as status:
                 # Build compatibility map (cached per weapon)
                 try:
-                    status.update(label="Building compatibility map...")
+                    status.update(label=t("status.building_compat"))
                     compat_map = get_compat_map(weapon_id, item_lookup)
-                    st.write(f"✓ Found {len(compat_map['reachable_items'])} compatible mods")
+                    st.write(f"✓ {t('status.found_mods', count=len(compat_map['reachable_items']))}")
                 except Exception as e:
-                    status.update(label="Failed", state="error")
-                    st.error(f"Failed to build compatibility map: {e}")
+                    status.update(label=t("status.failed"), state="error")
+                    st.error(f"{t('status.failed_compat')}: {e}")
                     st.stop()
 
                 # Run optimization
                 try:
-                    status.update(label="Running CP-SAT solver...")
-                    st.write("✓ Building constraint model...")
+                    status.update(label=t("status.running_solver"))
+                    st.write(f"✓ {t('status.building_model')}")
                     result = optimize_weapon(
                         weapon_id,
                         item_lookup,
@@ -1009,6 +1064,9 @@ def main():
                         max_price=max_price,
                         min_ergonomics=min_ergonomics,
                         max_recoil_v=max_recoil_v,
+                        min_mag_capacity=min_mag_capacity,
+                        min_sighting_range=min_sighting_range,
+                        max_weight=max_weight,
                         ergo_weight=ergo_weight,
                         recoil_weight=recoil_weight,
                         price_weight=price_weight,
@@ -1017,12 +1075,13 @@ def main():
                         player_level=player_level,
                     )
                     if result["status"] == "infeasible":
-                        status.update(label="No solution found", state="error")
+                        status.update(label=t("status.no_solution"), state="error")
                     else:
-                        status.update(label=f"Optimization {result['status']}", state="complete")
+                        status_key = f"results.{result['status']}" if result['status'] in ['optimal', 'feasible'] else "results.feasible"
+                        status.update(label=f"{t('results.optimization_status')} {t(status_key)}", state="complete")
                 except Exception as e:
-                    status.update(label="Optimization failed", state="error")
-                    st.error(f"Optimization failed: {e}")
+                    status.update(label=t("status.optimization_failed"), state="error")
+                    st.error(f"{t('status.optimization_failed')}: {e}")
                     st.stop()
 
             # Display results
@@ -1030,6 +1089,9 @@ def main():
                 "max_price": max_price,
                 "min_ergonomics": min_ergonomics,
                 "max_recoil_v": max_recoil_v,
+                "min_mag_capacity": min_mag_capacity,
+                "min_sighting_range": min_sighting_range,
+                "max_weight": max_weight,
                 "trader_levels": trader_levels,
                 "flea_available": flea_available,
                 "player_level": player_level,
@@ -1041,7 +1103,7 @@ def main():
             # Export buttons
             if result["status"] != "infeasible":
                 st.markdown("---")
-                st.subheader("Export Build")
+                st.subheader(t("export.header"))
 
                 json_data, markdown_text = generate_build_export(
                     result, item_lookup, weapon_stats, presets, selected_gun, constraints
@@ -1050,14 +1112,14 @@ def main():
                 col1, col2 = st.columns(2)
                 with col1:
                     st.download_button(
-                        label="📥 Download JSON",
+                        label=f"📥 {t('export.download_json')}",
                         data=json.dumps(json_data, indent=2),
                         file_name=f"{selected_gun['name'].replace(' ', '_')}_build.json",
                         mime="application/json",
                     )
                 with col2:
                     st.download_button(
-                        label="📥 Download Markdown",
+                        label=f"📥 {t('export.download_markdown')}",
                         data=markdown_text,
                         file_name=f"{selected_gun['name'].replace(' ', '_')}_build.md",
                         mime="text/markdown",
@@ -1065,14 +1127,14 @@ def main():
 
         else:
             # Initial state for Optimize tab
-            st.info("Configure weights and constraints above, then click **Optimize Build**.")
-            st.markdown("""
-            **How it works:**
-            1. Set your priority weights using the triangle chart (click grid points)
-            2. Optionally set hard constraints (budget, min ergo, max recoil)
-            3. Click **Optimize Build** to find the best mod configuration
+            st.info(f"{t('optimize.how_it_works')} {t('optimize.how_step_3').replace('**', '')}")
+            st.markdown(f"""
+            **{t('optimize.how_it_works')}**
+            1. {t('optimize.how_step_1')}
+            2. {t('optimize.how_step_2')}
+            3. {t('optimize.how_step_3')}
 
-            **Tip:** Use the **Explore Trade-offs** tab first to understand what's achievable!
+            **{t('optimize.tip')}** {t('optimize.tip_text')}
             """)
 
 

@@ -23,7 +23,7 @@ from queries import GUNS_QUERY, MODS_QUERY
 API_URL = "https://api.tarkov.dev/graphql"
 CACHE_DIR = os.path.join(os.path.dirname(__file__), ".cache")
 CACHE_TTL = 3600  # 1 hour in seconds
-CACHE_VERSION = 3  # Increment when data format changes
+CACHE_VERSION = 4  # Increment when data format changes
 
 
 def _get_cache_path(query, variables):
@@ -449,6 +449,10 @@ def extract_mod_stats(mod):
         "height": mod.get("height", 0) or 0,
         # Minimum player level required to buy from flea market
         "min_level_flea": mod.get("minLevelForFlea") or 0,
+        # Magazine capacity (only for magazines)
+        "capacity": props.get("capacity") or 0,
+        # Sighting range in meters (only for scopes/sights)
+        "sighting_range": props.get("sightingRange") or 0,
     }
 
 
@@ -642,6 +646,9 @@ def explore_pareto(
     max_price=None,
     min_ergonomics=None,
     max_recoil_v=None,
+    min_mag_capacity=None,
+    min_sighting_range=None,
+    max_weight=None,
     steps=10,
     trader_levels=None,
     flea_available=True,
@@ -659,6 +666,8 @@ def explore_pareto(
         max_price: Optional budget constraint (always respected if set)
         min_ergonomics: Optional min ergo constraint (always respected if set)
         max_recoil_v: Optional max recoil constraint (always respected if set)
+        min_mag_capacity: Optional minimum magazine capacity (always respected if set)
+        min_sighting_range: Optional minimum sighting range (always respected if set)
         steps: Number of points to sample along the frontier
         trader_levels: Dict mapping trader name to level (1-4). If None, all at LL4.
         flea_available: Whether flea market is accessible
@@ -672,8 +681,15 @@ def explore_pareto(
 
     frontier = []
 
-    # Common kwargs for trader level and player level constraints
-    trader_kwargs = {"trader_levels": trader_levels, "flea_available": flea_available, "player_level": player_level}
+    # Common kwargs for all constraints
+    constraint_kwargs = {
+        "trader_levels": trader_levels,
+        "flea_available": flea_available,
+        "player_level": player_level,
+        "min_mag_capacity": min_mag_capacity,
+        "min_sighting_range": min_sighting_range,
+        "max_weight": max_weight,
+    }
 
     # Weight presets for single-objective optimization
     RECOIL_WEIGHTS = {"ergo_weight": 0, "recoil_weight": 1, "price_weight": 0}
@@ -686,12 +702,12 @@ def explore_pareto(
         result_low = optimize_weapon(
             weapon_id, item_lookup, compatibility_map,
             max_price=max_price, max_recoil_v=max_recoil_v,
-            **RECOIL_WEIGHTS, **trader_kwargs
+            **RECOIL_WEIGHTS, **constraint_kwargs
         )
         result_high = optimize_weapon(
             weapon_id, item_lookup, compatibility_map,
             max_price=max_price, max_recoil_v=max_recoil_v,
-            **ERGO_WEIGHTS, **trader_kwargs
+            **ERGO_WEIGHTS, **constraint_kwargs
         )
 
         if result_low["status"] == "infeasible":
@@ -723,7 +739,7 @@ def explore_pareto(
             result = optimize_weapon(
                 weapon_id, item_lookup, compatibility_map,
                 max_price=max_price, min_ergonomics=target, max_recoil_v=max_recoil_v,
-                **RECOIL_WEIGHTS, **trader_kwargs
+                **RECOIL_WEIGHTS, **constraint_kwargs
             )
             if result["status"] != "infeasible":
                 stats = calculate_total_stats(weapon_stats, result["selected_items"], item_lookup)
@@ -735,12 +751,12 @@ def explore_pareto(
         result_low = optimize_weapon(
             weapon_id, item_lookup, compatibility_map,
             max_price=max_price, max_recoil_v=max_recoil_v,
-            **PRICE_WEIGHTS, **trader_kwargs
+            **PRICE_WEIGHTS, **constraint_kwargs
         )
         result_high = optimize_weapon(
             weapon_id, item_lookup, compatibility_map,
             max_price=max_price, max_recoil_v=max_recoil_v,
-            **ERGO_WEIGHTS, **trader_kwargs
+            **ERGO_WEIGHTS, **constraint_kwargs
         )
 
         if result_low["status"] == "infeasible":
@@ -772,7 +788,7 @@ def explore_pareto(
             result = optimize_weapon(
                 weapon_id, item_lookup, compatibility_map,
                 max_price=max_price, min_ergonomics=target, max_recoil_v=max_recoil_v,
-                **PRICE_WEIGHTS, **trader_kwargs
+                **PRICE_WEIGHTS, **constraint_kwargs
             )
             if result["status"] != "infeasible":
                 stats = calculate_total_stats(weapon_stats, result["selected_items"], item_lookup)
@@ -784,12 +800,12 @@ def explore_pareto(
         result_low = optimize_weapon(
             weapon_id, item_lookup, compatibility_map,
             max_price=max_price, min_ergonomics=min_ergonomics,
-            **RECOIL_WEIGHTS, **trader_kwargs
+            **RECOIL_WEIGHTS, **constraint_kwargs
         )
         result_high = optimize_weapon(
             weapon_id, item_lookup, compatibility_map,
             max_price=max_price, min_ergonomics=min_ergonomics,
-            **PRICE_WEIGHTS, **trader_kwargs
+            **PRICE_WEIGHTS, **constraint_kwargs
         )
 
         if result_low["status"] == "infeasible":
@@ -818,7 +834,7 @@ def explore_pareto(
             result = optimize_weapon(
                 weapon_id, item_lookup, compatibility_map,
                 max_price=max_price, min_ergonomics=min_ergonomics, max_recoil_v=target,
-                **PRICE_WEIGHTS, **trader_kwargs
+                **PRICE_WEIGHTS, **constraint_kwargs
             )
             if result["status"] != "infeasible":
                 stats = calculate_total_stats(weapon_stats, result["selected_items"], item_lookup)
@@ -853,6 +869,7 @@ def _build_frontier_point(stats, result):
 def optimize_weapon(
     weapon_id, item_lookup, compatibility_map,
     max_price=None, min_ergonomics=None, max_recoil_v=None,
+    min_mag_capacity=None, min_sighting_range=None, max_weight=None,
     ergo_weight=1.0, recoil_weight=1.0, price_weight=0.0,
     trader_levels=None, flea_available=True, player_level=None
 ):
@@ -863,6 +880,9 @@ def optimize_weapon(
         max_price: Optional budget constraint (total build cost)
         min_ergonomics: Optional minimum final ergonomics (e.g., 50 means final ergo >= 50)
         max_recoil_v: Optional maximum final vertical recoil (e.g., 70 means final recoil <= 70)
+        min_mag_capacity: Optional minimum magazine capacity (e.g., 30 means mag >= 30 rounds)
+        min_sighting_range: Optional minimum sighting range in meters (e.g., 100 means sight >= 100m)
+        max_weight: Optional maximum total weight in kg (e.g., 5.0 means total <= 5kg)
         ergo_weight: Weight for ergonomics in objective (higher = prioritize ergo)
         recoil_weight: Weight for recoil reduction in objective (higher = prioritize low recoil)
         price_weight: Weight for price in objective (higher = prioritize low cost)
@@ -879,6 +899,9 @@ def optimize_weapon(
     - Required: API-marked required slots must have exactly one item
     - Availability: Items must be purchasable at given trader levels or from flea
     - Player Level: Items with minLevelForFlea > player_level are excluded from flea
+    - Magazine Capacity: At least one selected magazine must meet min_mag_capacity
+    - Sighting Range: At least one selected sight/scope must meet min_sighting_range
+    - Max Weight: Total weight of selected mods must not exceed max_weight
     """
     if trader_levels is None:
         trader_levels = DEFAULT_TRADER_LEVELS
@@ -1123,6 +1146,60 @@ def optimize_weapon(
         naked_recoil_v = weapon["stats"].get("naked_recoil_v", 100)
         max_recoil_modifier = int(SCALE * (max_recoil_v / naked_recoil_v - 1))
         model.Add(total_recoil_var <= max_recoil_modifier)
+
+    # Minimum magazine capacity constraint
+    # At least one selected magazine must have capacity >= min_mag_capacity
+    if min_mag_capacity is not None:
+        mag_vars_meeting_capacity = []
+        for item_id in available_items:
+            if item_id not in item_vars:
+                continue
+            stats = item_lookup[item_id]["stats"]
+            capacity = stats.get("capacity", 0)
+            if capacity >= min_mag_capacity:
+                mag_vars_meeting_capacity.append(item_vars[item_id])
+        if mag_vars_meeting_capacity:
+            model.Add(sum(mag_vars_meeting_capacity) >= 1)
+        else:
+            # No magazines meet the capacity requirement - problem is infeasible
+            model.Add(0 >= 1)  # Force infeasibility
+
+    # Minimum sighting range constraint
+    # At least one selected sight/scope must have sighting_range >= min_sighting_range
+    if min_sighting_range is not None:
+        sight_vars_meeting_range = []
+        for item_id in available_items:
+            if item_id not in item_vars:
+                continue
+            stats = item_lookup[item_id]["stats"]
+            sighting_range = stats.get("sighting_range", 0)
+            if sighting_range >= min_sighting_range:
+                sight_vars_meeting_range.append(item_vars[item_id])
+        if sight_vars_meeting_range:
+            model.Add(sum(sight_vars_meeting_range) >= 1)
+        else:
+            # No sights meet the range requirement - problem is infeasible
+            model.Add(0 >= 1)  # Force infeasibility
+
+    # Maximum weight constraint
+    # Total weight of base weapon + selected mods must not exceed max_weight
+    if max_weight is not None:
+        # Use grams (integers) for constraint precision
+        WEIGHT_SCALE = 1000  # Convert kg to grams
+        base_weight_g = int(weapon["stats"].get("weight", 0) * WEIGHT_SCALE)
+        max_weight_g = int(max_weight * WEIGHT_SCALE)
+
+        weight_terms = []
+        for item_id in available_items:
+            if item_id not in item_vars:
+                continue
+            stats = item_lookup[item_id]["stats"]
+            weight_g = int(stats.get("weight", 0) * WEIGHT_SCALE)
+            if weight_g > 0:
+                weight_terms.append(weight_g * item_vars[item_id])
+
+        if weight_terms:
+            model.Add(base_weight_g + sum(weight_terms) <= max_weight_g)
 
     # === OBJECTIVE FUNCTION ===
     objective_terms = []
