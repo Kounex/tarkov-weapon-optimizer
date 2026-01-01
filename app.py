@@ -88,8 +88,67 @@ def get_image_url(item_data, prefer_high_res=False, prefer_icon=False):
         )
 
 
-def display_mods_table(item_ids, item_lookup, show_price=True):
-    """Display a markdown table of mods with their stats."""
+def get_best_offer_display(stats, trader_levels=None, flea_available=True, player_level=None):
+    """Get a formatted string showing the best AVAILABLE offer source with trader level.
+
+    Respects trader level and player level constraints to show what the player
+    would actually pay and where they'd buy from.
+    """
+    offers = stats.get('offers', [])
+    if not offers:
+        return stats.get('price_source', 'market'), stats.get('price', 0)
+
+    min_level_flea = stats.get('min_level_flea', 0) or 15
+
+    # Filter to only available offers based on constraints
+    available_offers = []
+    for offer in offers:
+        source = offer.get('source', '')
+        if source == 'fleaMarket':
+            if not flea_available:
+                continue
+            if player_level is not None and min_level_flea > player_level:
+                continue
+            available_offers.append(offer)
+        else:
+            # Trader offer - check level requirement
+            vendor = offer.get('vendor_normalized', '').lower()
+            required_level = offer.get('trader_level')
+            if trader_levels:
+                player_trader_level = trader_levels.get(vendor, 4)
+                if required_level is not None and required_level > player_trader_level:
+                    continue
+            available_offers.append(offer)
+
+    if not available_offers:
+        return "Unavailable", 0
+
+    # Find the best (lowest price) available offer
+    best_offer = min(available_offers, key=lambda x: x.get('price', float('inf')))
+    price = best_offer.get('price', 0)
+    source = best_offer.get('source', '')
+
+    if source == 'fleaMarket':
+        return f"Flea Lv{min_level_flea}", price
+    else:
+        vendor_name = best_offer.get('vendor_name', source)
+        trader_level = best_offer.get('trader_level')
+        if trader_level:
+            return f"{vendor_name} LL{trader_level}", price
+        return vendor_name, price
+
+
+def display_mods_table(item_ids, item_lookup, show_price=True, constraints=None):
+    """Display a markdown table of mods with their stats.
+
+    Args:
+        constraints: Optional dict with trader_levels, flea_available, player_level
+                     to show accurate source/price based on what's actually available.
+    """
+    trader_levels = constraints.get("trader_levels") if constraints else None
+    flea_available = constraints.get("flea_available", True) if constraints else True
+    player_level = constraints.get("player_level") if constraints else None
+
     rows = []
     for item_id in item_ids:
         if item_id in item_lookup:
@@ -107,10 +166,11 @@ def display_mods_table(item_ids, item_lookup, show_price=True):
                 "recoil": f"{recoil:+.1f}%" if recoil != 0 else "-",
             }
             if show_price:
-                price = stats.get('price', 0)
-                price_source = stats.get('price_source', 'market')
+                source_display, price = get_best_offer_display(
+                    stats, trader_levels, flea_available, player_level
+                )
                 row["price"] = f"₽{price:,}"
-                row["source"] = price_source
+                row["source"] = source_display
             rows.append(row)
 
     if rows:
@@ -245,10 +305,10 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
         if additional_items:
             st.markdown("---")
             st.markdown("**Additional Mods:**")
-            display_mods_table(additional_items, item_lookup, show_price=True)
+            display_mods_table(additional_items, item_lookup, show_price=True, constraints=constraints)
 
         with st.expander(f"Items in {preset_info.get('name')} preset", expanded=False):
-            display_mods_table(preset_item_ids, item_lookup, show_price=False)
+            display_mods_table(preset_item_ids, item_lookup, show_price=False, constraints=constraints)
 
     elif selected_items:
         st.markdown("**Naked Gun + Individual Mods**")
@@ -271,7 +331,7 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
         if selected_items:
             st.markdown("---")
             st.markdown("**Additional Mods:**")
-            display_mods_table(selected_items, item_lookup, show_price=True)
+            display_mods_table(selected_items, item_lookup, show_price=True, constraints=constraints)
     else:
         st.markdown("**Naked Gun**")
         col1, col2 = st.columns([3, 1])
@@ -303,6 +363,9 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
                 st.write(f"**Min Ergonomics Constraint:** {constraints['min_ergonomics']}")
             if constraints.get("max_recoil_v"):
                 st.write(f"**Max Recoil V Constraint:** {constraints['max_recoil_v']}")
+            player_lvl = constraints.get("player_level")
+            if player_lvl is not None:
+                st.write(f"**Player Level:** {player_lvl}")
             trader_lvls = constraints.get("trader_levels", {})
             flea = constraints.get("flea_available", True)
             if trader_lvls:
@@ -426,6 +489,9 @@ def generate_build_export(result, item_lookup, weapon_stats, presets, selected_g
             md_lines.append(f"- Min Ergonomics: {constraints['min_ergonomics']}")
         if constraints.get("max_recoil_v"):
             md_lines.append(f"- Max Recoil V: {constraints['max_recoil_v']}")
+        player_lvl = constraints.get("player_level")
+        if player_lvl is not None:
+            md_lines.append(f"- Player Level: {player_lvl}")
         trader_lvls = constraints.get("trader_levels", {})
         flea = constraints.get("flea_available", True)
         if trader_lvls:
@@ -496,15 +562,36 @@ def main():
                 st.markdown(f"  - Items: {len(preset_items)}")
                 st.markdown("---")
 
-    # Trader Level Settings
+    # Player Level and Trader Settings
     st.sidebar.markdown("---")
-    st.sidebar.header("🏪 Trader Access")
+    st.sidebar.header("👤 Player & Trader Access")
 
-    flea_available = st.sidebar.checkbox(
-        "Flea Market Access",
-        value=True,
-        help="Enable if you have access to the Flea Market (requires player level 15).",
+    # Player level input
+    player_level = st.sidebar.number_input(
+        "Player Level",
+        min_value=1,
+        max_value=79,
+        value=79,
+        help="Your PMC level. Affects which items are available on the Flea Market (each item has a minimum level requirement).",
     )
+
+    # Flea market access - automatically disabled if player level < 15
+    flea_unlocked = player_level >= 15
+    if flea_unlocked:
+        flea_available = st.sidebar.checkbox(
+            "Flea Market Access",
+            value=True,
+            help="Enable if you have access to the Flea Market. Items also have individual level requirements.",
+        )
+    else:
+        flea_available = False
+        st.sidebar.checkbox(
+            "Flea Market Access",
+            value=False,
+            disabled=True,
+            help="Flea Market unlocks at level 15.",
+        )
+        st.sidebar.caption("⚠️ Flea Market unlocks at level 15")
 
     # Define traders with display names (only those who sell weapon mods)
     traders = [
@@ -549,10 +636,12 @@ def main():
                 key=session_key,
             )
 
-    # Show summary of non-maxed traders
+    # Show summary of constraints
     non_maxed = [name for key, name in traders if trader_levels.get(key, 4) < 4]
-    if non_maxed or not flea_available:
+    if non_maxed or not flea_available or player_level < 79:
         constraints_info = []
+        if player_level < 79:
+            constraints_info.append(f"level {player_level}")
         if non_maxed:
             constraints_info.append(f"{len(non_maxed)} traders below LL4")
         if not flea_available:
@@ -640,6 +729,7 @@ def main():
                         steps=8,
                         trader_levels=trader_levels,
                         flea_available=flea_available,
+                        player_level=player_level,
                     )
                     status.update(label="Exploration complete", state="complete")
                 except Exception as e:
@@ -924,6 +1014,7 @@ def main():
                         price_weight=price_weight,
                         trader_levels=trader_levels,
                         flea_available=flea_available,
+                        player_level=player_level,
                     )
                     if result["status"] == "infeasible":
                         status.update(label="No solution found", state="error")
@@ -941,6 +1032,7 @@ def main():
                 "max_recoil_v": max_recoil_v,
                 "trader_levels": trader_levels,
                 "flea_available": flea_available,
+                "player_level": player_level,
             }
             display_optimization_results(
                 result, item_lookup, weapon_stats, presets, selected_gun, constraints

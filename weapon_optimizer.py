@@ -23,7 +23,7 @@ from queries import GUNS_QUERY, MODS_QUERY
 API_URL = "https://api.tarkov.dev/graphql"
 CACHE_DIR = os.path.join(os.path.dirname(__file__), ".cache")
 CACHE_TTL = 3600  # 1 hour in seconds
-CACHE_VERSION = 2  # Increment when data format changes
+CACHE_VERSION = 3  # Increment when data format changes
 
 
 def _get_cache_path(query, variables):
@@ -447,6 +447,8 @@ def extract_mod_stats(mod):
         # Grid size
         "width": mod.get("width", 0) or 0,
         "height": mod.get("height", 0) or 0,
+        # Minimum player level required to buy from flea market
+        "min_level_flea": mod.get("minLevelForFlea") or 0,
     }
 
 
@@ -460,7 +462,7 @@ DEFAULT_TRADER_LEVELS = {
 }
 
 
-def get_available_price(stats, trader_levels=None, flea_available=True):
+def get_available_price(stats, trader_levels=None, flea_available=True, player_level=None):
     """Get the best available price for an item given trader levels and flea access.
 
     Args:
@@ -468,6 +470,8 @@ def get_available_price(stats, trader_levels=None, flea_available=True):
         trader_levels: Dict mapping trader name (normalized) to level (1-4).
                        If None, defaults to all traders at level 4.
         flea_available: Whether flea market is accessible
+        player_level: Player's PMC level. Used to check minLevelForFlea requirement.
+                      If None, no player level restriction is applied.
 
     Returns:
         Tuple of (price, source, is_available)
@@ -478,12 +482,18 @@ def get_available_price(stats, trader_levels=None, flea_available=True):
     if trader_levels is None:
         trader_levels = DEFAULT_TRADER_LEVELS
 
+    # Get the minimum level required to buy this item from flea
+    min_level_flea = stats.get("min_level_flea", 0)
+
     offers = stats.get("offers")
     if not offers:
         # Fallback for items without offers data (legacy cache or no traders sell it)
         # Check if there's a default price available
         default_price = stats.get("price", 0)
         if default_price > 0 and flea_available:
+            # Check player level requirement for flea
+            if player_level is not None and min_level_flea > player_level:
+                return (0, None, False)
             return (default_price, stats.get("price_source", "market"), True)
         return (0, None, False)
 
@@ -500,10 +510,13 @@ def get_available_price(stats, trader_levels=None, flea_available=True):
         if source == "fleaMarket":
             if not flea_available:
                 continue
+            # Check player level requirement for this item on flea
+            if player_level is not None and min_level_flea > player_level:
+                continue
         else:
             # Trader offer - check level requirement for this specific trader
-            player_level = trader_levels.get(vendor, 4)  # Default to 4 if unknown trader
-            if required_level is not None and required_level > player_level:
+            trader_level = trader_levels.get(vendor, 4)  # Default to 4 if unknown trader
+            if required_level is not None and required_level > trader_level:
                 continue
 
         # This offer is accessible
@@ -631,7 +644,8 @@ def explore_pareto(
     max_recoil_v=None,
     steps=10,
     trader_levels=None,
-    flea_available=True
+    flea_available=True,
+    player_level=None
 ):
     """
     Explore the Pareto frontier between two dimensions, ignoring the third.
@@ -648,6 +662,7 @@ def explore_pareto(
         steps: Number of points to sample along the frontier
         trader_levels: Dict mapping trader name to level (1-4). If None, all at LL4.
         flea_available: Whether flea market is accessible
+        player_level: Player's PMC level. Used to filter items by minLevelForFlea.
 
     Returns:
         List of dicts with keys: ergo, recoil_pct, recoil_v, recoil_h, price, ...
@@ -657,8 +672,8 @@ def explore_pareto(
 
     frontier = []
 
-    # Common kwargs for trader level constraints
-    trader_kwargs = {"trader_levels": trader_levels, "flea_available": flea_available}
+    # Common kwargs for trader level and player level constraints
+    trader_kwargs = {"trader_levels": trader_levels, "flea_available": flea_available, "player_level": player_level}
 
     # Weight presets for single-objective optimization
     RECOIL_WEIGHTS = {"ergo_weight": 0, "recoil_weight": 1, "price_weight": 0}
@@ -839,7 +854,7 @@ def optimize_weapon(
     weapon_id, item_lookup, compatibility_map,
     max_price=None, min_ergonomics=None, max_recoil_v=None,
     ergo_weight=1.0, recoil_weight=1.0, price_weight=0.0,
-    trader_levels=None, flea_available=True
+    trader_levels=None, flea_available=True, player_level=None
 ):
     """
     Use CP-SAT solver to find optimal mod configuration.
@@ -854,6 +869,8 @@ def optimize_weapon(
         trader_levels: Dict mapping trader name to level (1-4). If None, all traders at LL4.
                        Example: {"prapor": 3, "mechanic": 4, "skier": 2, ...}
         flea_available: Whether flea market is accessible (requires player level 15)
+        player_level: Player's PMC level. Used to filter items by minLevelForFlea.
+                      If None, no player level restriction is applied.
 
     Constraints:
     - Mutex: At most one item per slot
@@ -861,6 +878,7 @@ def optimize_weapon(
     - Conflicts: Items with conflictingItems can't both be selected
     - Required: API-marked required slots must have exactly one item
     - Availability: Items must be purchasable at given trader levels or from flea
+    - Player Level: Items with minLevelForFlea > player_level are excluded from flea
     """
     if trader_levels is None:
         trader_levels = DEFAULT_TRADER_LEVELS
@@ -871,14 +889,16 @@ def optimize_weapon(
     slot_items = compatibility_map["slot_items"]
     slot_owner = compatibility_map["slot_owner"]
 
-    # Filter reachable items by availability at given trader levels
+    # Filter reachable items by availability at given trader levels and player level
     available_items = {}
     item_prices = {}  # item_id -> (price, source) at current trader levels
     for item_id in reachable:
         if item_id not in item_lookup:
             continue
         stats = item_lookup[item_id]["stats"]
-        price, source, is_available = get_available_price(stats, trader_levels, flea_available)
+        price, source, is_available = get_available_price(
+            stats, trader_levels, flea_available, player_level
+        )
         if is_available:
             available_items[item_id] = reachable[item_id]
             item_prices[item_id] = (price, source)
