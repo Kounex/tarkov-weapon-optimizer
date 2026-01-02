@@ -33,12 +33,17 @@ jobs:
 
       - name: Build Windows Executable
         run: |
-          nuitka --standalone --onefile --windows-disable-console ^
-            --include-data-dir=locales=locales ^
-            --include-data-file=tasks.json=tasks.json ^
-            --output-dir=dist ^
-            --python-flag=no_site ^
-            app.py
+          $nuitkaArgs = @(
+            "--standalone",
+            "--onefile",
+            "--windows-disable-console",
+            "--include-data-dir=locales=locales",
+            "--include-data-file=tasks.json=tasks.json",
+            "--output-dir=dist",
+            "--python-flag=no_site",
+            "app.py"
+          )
+          nuitka @nuitkaArgs
 
       - name: Upload Windows Executable
         uses: actions/upload-artifact@v4
