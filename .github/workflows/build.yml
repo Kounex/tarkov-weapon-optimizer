@@ -36,6 +36,9 @@ jobs:
           pyinstaller --onefile --noconsole `
             --add-data "locales;locales" `
             --add-data "tasks.json;." `
+            --copy-metadata streamlit `
+            --copy-metadata altair `
+            --copy-metadata plotly `
             --name tarkov-optimizer `
             app.py
 
@@ -71,6 +74,9 @@ jobs:
           pyinstaller --onefile \
             --add-data "locales:locales" \
             --add-data "tasks.json:." \
+            --copy-metadata streamlit \
+            --copy-metadata altair \
+            --copy-metadata plotly \
             --name tarkov-optimizer \
             app.py
 
@@ -106,6 +112,9 @@ jobs:
           pyinstaller --onefile \
             --add-data "locales:locales" \
             --add-data "tasks.json:." \
+            --copy-metadata streamlit \
+            --copy-metadata altair \
+            --copy-metadata plotly \
             --name tarkov-optimizer \
             app.py
 
