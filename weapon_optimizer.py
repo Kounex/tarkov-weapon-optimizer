@@ -1247,13 +1247,28 @@ def optimize_weapon(
     if preset_vars:
         model.Add(sum(preset_vars.values()) <= 1)
 
+    # Pre-compute which items are in which slots for preset occupancy tracking
+    slot_to_preset_items = {}  # slot_id -> set of item_ids that are in this slot AND in presets
+    preset_item_to_slot = {}   # item_id -> slot_id (for items in presets)
+    for preset_id, preset_item_ids in preset_items_map.items():
+        for item_id in preset_item_ids:
+            # Find which slot this item belongs to
+            for slot_id, items in slot_items.items():
+                if item_id in items:
+                    if slot_id not in slot_to_preset_items:
+                        slot_to_preset_items[slot_id] = set()
+                    slot_to_preset_items[slot_id].add(item_id)
+                    preset_item_to_slot[item_id] = slot_id
+                    break
+
     # Create effective item variables for constraints
     # An item is "effectively selected" if:
     # 1. Individually selected (item_vars[item_id] == 1), OR
-    # 2. A preset containing the item is selected
-    # This ensures constraints (mag capacity, sight range, etc.) work with preset-bundled items
+    # 2. A preset containing the item is selected AND no replacement is chosen for that slot
+    # This ensures constraints work with preset-bundled items while allowing replacements
     effective_item_vars = {}
     item_only_in_preset = {}  # item_id -> True if only available via preset
+    preset_item_kept_vars = {}  # item_id -> BoolVar (1 if preset item is kept, 0 if replaced)
 
     for item_id in item_vars:
         containing_presets = item_to_presets.get(item_id, [])
@@ -1263,25 +1278,44 @@ def optimize_weapon(
         # Track if item is only available via preset
         item_only_in_preset[item_id] = not is_individually_available and bool(preset_bool_vars)
 
-        if preset_bool_vars:
-            # effective = item_var OR any(preset_vars_containing_item)
+        if preset_bool_vars and item_id in preset_item_to_slot:
+            # This item is in a preset - it's "kept" only if preset selected AND no replacement
+            slot_id = preset_item_to_slot[item_id]
+            other_items_in_slot = [i for i in slot_items.get(slot_id, [])
+                                   if i != item_id and i in item_vars]
+
+            if other_items_in_slot:
+                # Create "any replacement selected" variable
+                any_replacement = model.NewBoolVar(f"any_replacement_{item_id}")
+                model.AddMaxEquality(any_replacement, [item_vars[i] for i in other_items_in_slot])
+
+                # Create "any preset with this item selected" variable
+                any_preset_with_item = model.NewBoolVar(f"any_preset_with_{item_id}")
+                model.AddMaxEquality(any_preset_with_item, preset_bool_vars)
+
+                # kept = preset_selected AND NOT replacement
+                kept = model.NewBoolVar(f"kept_{item_id}")
+                model.Add(kept <= any_preset_with_item)
+                model.Add(kept <= 1 - any_replacement)
+                model.Add(kept >= any_preset_with_item - any_replacement)
+                preset_item_kept_vars[item_id] = kept
+
+                # effective = item_var OR kept (not just item_var OR preset_var)
+                effective = model.NewBoolVar(f"effective_{item_id}")
+                model.AddMaxEquality(effective, [item_vars[item_id], kept])
+                effective_item_vars[item_id] = effective
+            else:
+                # No other items can go in this slot, so preset item is always kept if preset selected
+                effective = model.NewBoolVar(f"effective_{item_id}")
+                model.AddMaxEquality(effective, [item_vars[item_id]] + preset_bool_vars)
+                effective_item_vars[item_id] = effective
+        elif preset_bool_vars:
+            # Item is in preset but we couldn't find its slot - use simple logic
             effective = model.NewBoolVar(f"effective_{item_id}")
             model.AddMaxEquality(effective, [item_vars[item_id]] + preset_bool_vars)
             effective_item_vars[item_id] = effective
         else:
             effective_item_vars[item_id] = item_vars[item_id]
-
-    # Pre-compute which items are in which slots for preset occupancy tracking
-    slot_to_preset_items = {}  # slot_id -> set of item_ids that are in this slot AND in presets
-    for preset_id, preset_item_ids in preset_items_map.items():
-        for item_id in preset_item_ids:
-            # Find which slot this item belongs to
-            for slot_id, items in slot_items.items():
-                if item_id in items:
-                    if slot_id not in slot_to_preset_items:
-                        slot_to_preset_items[slot_id] = set()
-                    slot_to_preset_items[slot_id].add(item_id)
-                    break
 
     # Constraint: Included items
     if include_items:
@@ -1359,7 +1393,8 @@ def optimize_weapon(
         # item_var == 1 iff sum(placements) >= 1, and sum(placements) <= 1 (exactly one placement)
         model.Add(sum(placement_vars) == item_vars[item_id])
 
-    # Constraint 1b: Mutex per slot - at most one item can be placed in each slot
+    # Constraint 1b: Mutex per slot - at most one item can be placed/kept in each slot
+    # This includes both individually selected items AND preset items that are "kept"
     for slot_id, items in slot_items.items():
         slot_placements = []
         for item_id in items:
@@ -1370,25 +1405,17 @@ def optimize_weapon(
                 if slot_id in placed_in.get(item_id, {}):
                     slot_placements.append(placed_in[item_id][slot_id])
             else:
-                # Item only has one valid slot, use item_var directly
-                # But only add if this is the item's valid slot
+                # Item only has one valid slot
                 valid_slots = item_to_valid_slots.get(item_id, [])
                 if any(s[0] == slot_id for s in valid_slots):
+                    # For preset items, use the "kept" variable instead of item_var
+                    # This ensures preset items occupy slots when kept
+                    if item_id in preset_item_kept_vars:
+                        slot_placements.append(preset_item_kept_vars[item_id])
                     slot_placements.append(item_vars[item_id])
 
         if slot_placements:
             model.Add(sum(slot_placements) <= 1)
-
-    # Constraint 1c: Preset occupancy
-    if preset_vars:
-        for preset_id, preset_var in preset_vars.items():
-            preset_item_ids = preset_items_map.get(preset_id, set())
-            for slot_id, preset_items_in_slot in slot_to_preset_items.items():
-                items_in_both = preset_items_in_slot & preset_item_ids
-                if items_in_both:
-                    for item_id in items_in_both:
-                        if item_only_in_preset.get(item_id, False):
-                            model.Add(item_vars[item_id] == 0).OnlyEnforceIf(preset_var)
 
     # Constraint 2: Dependency - placement requires parent to be selected
     item_connected_to_base = {i: False for i in item_vars}

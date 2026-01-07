@@ -33,7 +33,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system pyinstaller requests ortools streamlit altair pandas plotly
+          uv pip install --system pyinstaller requests ortools streamlit altair pandas plotly loguru
 
       - name: Build Windows Executable
         run: |
@@ -48,6 +48,7 @@ jobs:
             --copy-metadata altair `
             --copy-metadata plotly `
             --collect-all ortools `
+            --collect-all loguru `
             --name tarkov-optimizer `
             launcher.py
 
@@ -107,7 +108,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system pyinstaller requests ortools streamlit altair pandas plotly
+          uv pip install --system pyinstaller requests ortools streamlit altair pandas plotly loguru
 
       - name: Build Linux Executable
         run: |
@@ -122,6 +123,7 @@ jobs:
             --copy-metadata altair \
             --copy-metadata plotly \
             --collect-all ortools \
+            --collect-all loguru \
             --name tarkov-optimizer \
             launcher.py
 
@@ -181,7 +183,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv pip install --system pyinstaller requests ortools streamlit altair pandas plotly
+          uv pip install --system pyinstaller requests ortools streamlit altair pandas plotly loguru
 
       - name: Build macOS Executable
         run: |
@@ -196,6 +198,7 @@ jobs:
             --copy-metadata altair \
             --copy-metadata plotly \
             --collect-all ortools \
+            --collect-all loguru \
             --name tarkov-optimizer \
             launcher.py
 
