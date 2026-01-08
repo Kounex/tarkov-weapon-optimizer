@@ -37,7 +37,7 @@ jobs:
 
       - name: Build Windows Executable
         run: |
-          pyinstaller --onefile --noconsole `
+          pyinstaller --onefile `
             --add-data "locales;locales" `
             --add-data "tasks.json;." `
             --add-data "app.py;." `
