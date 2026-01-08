@@ -25,11 +25,20 @@ from queries import GUNS_QUERY, MODS_QUERY
 # Configure loguru
 # Remove default handler and add custom one
 logger.remove()
-_console_handler_id = logger.add(
-    sys.stderr,
-    format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-    level="INFO",
-)
+_console_handler_id = None
+
+# Check if running in PyInstaller frozen environment
+# sys.stderr may be None or an unsupported type in frozen apps
+if not getattr(sys, 'frozen', False) and sys.stderr is not None:
+    try:
+        _console_handler_id = logger.add(
+            sys.stderr,
+            format="<green>{time:YYYY-MM-DD HH:mm:ss}</green> | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
+            level="INFO",
+        )
+    except TypeError:
+        # Fallback if stderr is not a valid sink
+        pass
 
 # Also log to file with rotation (if possible)
 _log_dir = os.path.join(os.path.dirname(__file__), "logs")
