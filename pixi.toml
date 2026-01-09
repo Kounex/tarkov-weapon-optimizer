@@ -19,3 +19,4 @@ start = "streamlit run app.py"
 
 [pypi-dependencies]
 ortools = ">=9.0.0"
+loguru = ">=0.7.0"
