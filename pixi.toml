@@ -1,6 +1,6 @@
 [workspace]
 name = "tarkov-guns"
-version = "0.1.0"
+version = "1.0.0"
 description = "Tarkov Weapon Mod Optimizer"
 authors = ["Ahai"]
 channels = ["conda-forge"]
