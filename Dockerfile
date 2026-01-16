@@ -31,10 +31,12 @@ RUN mkdir -p logs .cache && chmod 777 logs .cache
 COPY . .
 
 # Expose the port Streamlit runs on
-EXPOSE 8501
+EXPOSE ${STREAMLIT_SERVER_PORT}
 
-# Add a healthcheck
-HEALTHCHECK CMD curl --fail http://localhost:8501/_stcore/health
+# Add a healthcheck using the configured port
+HEALTHCHECK --interval=30s --timeout=10s --retries=3 \
+    CMD curl --fail http://localhost:${STREAMLIT_SERVER_PORT}/_stcore/health || exit 1
 
 # Command to run the application
-ENTRYPOINT ["streamlit", "run", "app.py", "--server.port=8501", "--server.address=0.0.0.0"]
+# Streamlit honors STREAMLIT_SERVER_PORT and STREAMLIT_SERVER_ADDRESS env vars automatically
+ENTRYPOINT ["streamlit", "run", "app.py"]
