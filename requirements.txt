@@ -5,3 +5,4 @@ plotly
 pandas
 altair
 loguru
+extra-streamlit-components

@@ -74,7 +74,9 @@
     "select_build": "从图表或表格中选择一个配置以查看详情",
     "tip_recoil_at_ergo": "每一行显示了在该人机工效水平下的最佳后坐力。",
     "tip_price_at_ergo": "每一行显示了在该人机工效水平下的最低价格。",
-    "tip_price_at_recoil": "每一行显示了在该后坐力水平下的最低价格。"
+    "tip_price_at_recoil": "每一行显示了在该后坐力水平下的最低价格。",
+    "selected_build": "所选配置详情",
+    "click_point_hint": "点击图表上的点以查看配置详情"
   },
   "optimize": {
     "header": "优化您的配置",

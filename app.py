@@ -5,12 +5,13 @@ Streamlit Web UI for Tarkov Weapon Mod Optimizer
 import json
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # Set Streamlit config directory to project directory (must be before streamlit import)
 os.environ.setdefault("STREAMLIT_CONFIG_DIR", os.path.dirname(os.path.abspath(__file__)))
 
 import altair as alt
+import extra_streamlit_components as stx
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
@@ -245,13 +246,13 @@ def display_mods_table(item_ids, item_lookup, show_price=True, constraints=None)
         if item_id in item_lookup:
             item = item_lookup[item_id]
             stats = item["stats"]
-            name = item['data']['name']
+            name = item['data']['name'].replace("|", "\\|")
             icon_url = get_image_url(item["data"], prefer_icon=True)
             ergo = stats.get('ergonomics', 0)
             recoil = stats.get('recoil_modifier', 0) * 100
 
             row = {
-                "icon": f"![]({icon_url})" if icon_url else "",
+                "icon": f'<img src="{icon_url}" width="64" style="vertical-align:middle; min-width: 64px;">' if icon_url else "",
                 "name": name,
                 "ergo": f"{ergo:+.1f}" if ergo != 0 else "-",
                 "recoil": f"{recoil:+.1f}%" if recoil != 0 else "-",
@@ -278,7 +279,78 @@ def display_mods_table(item_ids, item_lookup, show_price=True, constraints=None)
             for row in rows:
                 lines.append(f"| {row['icon']} | {row['name']} | {row['ergo']} | {row['recoil']} |")
 
-        st.markdown("\n".join(lines))
+        st.markdown(
+            """<style>
+table { width: 75% !important; margin-left: auto !important; margin-right: auto !important; }
+@media (max-width: 1200px) { table { width: 100% !important; } }
+</style>""" + "\n" + "\n".join(lines),
+            unsafe_allow_html=True
+        )
+
+
+def calculate_build_cost(selected_items, selected_preset, item_lookup, weapon_stats, presets, selected_gun, fallback_base=None):
+    """
+    Calculate the actual total build cost and details.
+    
+    Returns a dict with: 'total_cost', 'base_cost', 'mods_cost', 'base_label'.
+    """
+    weapon_base_price = weapon_stats.get("price", 0)
+    
+    # Check if dummy price (unavailable) - don't include in total
+    if weapon_base_price > 100_000_000:
+        weapon_base_price = 0
+    
+    base_cost = 0
+    mods_cost = 0
+    base_label = t('results.base_weapon')
+    
+    if selected_preset:
+        # Find the preset info
+        preset_info = next((p for p in presets if p.get("id") == selected_preset), None)
+        
+        # If not found in purchasable presets, check all_presets
+        if not preset_info:
+            all_presets = item_lookup.get(selected_gun["id"], {}).get("all_presets", [])
+            preset_info = next((p for p in all_presets if p.get("id") == selected_preset), None)
+        
+        if preset_info:
+            preset_items = set(preset_info.get("items", []))
+            
+            # Handle fallback base logic if provided
+            is_fallback = fallback_base and fallback_base.get("type") == "preset"
+            preset_price = 0 if is_fallback else preset_info.get("price", 0)
+            
+            base_cost = preset_price
+            base_label = t('results.preset')
+            
+            # Only count cost of items NOT in the preset
+            mods_cost = sum(
+                item_lookup[item_id]["stats"].get("price", 0)
+                for item_id in selected_items
+                if item_id not in preset_items and item_id in item_lookup
+            )
+            
+            return {
+                "total_cost": base_cost + mods_cost,
+                "base_cost": base_cost,
+                "mods_cost": mods_cost,
+                "base_label": base_label
+            }
+    
+    # No preset - naked gun + all mod prices
+    base_cost = weapon_base_price
+    mods_cost = sum(
+        item_lookup[item_id]["stats"].get("price", 0)
+        for item_id in selected_items
+        if item_id in item_lookup
+    )
+    
+    return {
+        "total_cost": base_cost + mods_cost,
+        "base_cost": base_cost,
+        "mods_cost": mods_cost,
+        "base_label": base_label
+    }
 
 
 def display_optimization_results(result, item_lookup, weapon_stats, presets, selected_gun, constraints=None):
@@ -346,40 +418,20 @@ def display_optimization_results(result, item_lookup, weapon_stats, presets, sel
             help=f"{t('results.base_weapon')}: {weapon_stats.get('weight', 0):.2f} {t('units.kg')}",
         )
 
-    # Total Cost (including preset if selected, or naked gun + mods)
-    total_cost = final_stats['total_price']
-    weapon_base_price = weapon_stats.get("price", 0)
+    # Total Cost (using unified builder)
+    cost_data = calculate_build_cost(
+        selected_items,
+        selected_preset,
+        item_lookup,
+        weapon_stats,
+        presets,
+        selected_gun,
+        fallback_base=result.get("fallback_base")
+    )
     
-    # Check if dummy price (unavailable) - don't include in total
-    if weapon_base_price > 100_000_000:
-        weapon_base_price = 0
-
-    if selected_preset:
-        # Check for fallback preset (not purchasable, price=0)
-        fallback_base = result.get("fallback_base")
-        preset_info_temp = next((p for p in presets if p.get("id") == selected_preset), None)
-
-        # If not found in purchasable presets, check all_presets (for fallback case)
-        if not preset_info_temp:
-            all_presets = item_lookup[selected_gun["id"]].get("all_presets", [])
-            preset_info_temp = next((p for p in all_presets if p.get("id") == selected_preset), None)
-
-        if preset_info_temp:
-            preset_items_temp = set(preset_info_temp.get("items", []))
-            individual_cost = sum([
-                item_lookup[item_id]["stats"].get("price", 0)
-                for item_id in selected_items
-                if item_id not in preset_items_temp and item_id in item_lookup
-            ])
-            # Use price=0 if this is a fallback preset
-            preset_price = 0 if (fallback_base and fallback_base.get("type") == "preset") else preset_info_temp.get("price", 0)
-            total_cost = preset_price + individual_cost
-            cost_composition = f"{t('results.preset')}: ₽{preset_price:,} + {t('results.additional_mods')}: ₽{individual_cost:,}"
-            delta_val = individual_cost
-    else:
-        total_cost = weapon_base_price + final_stats['total_price']
-        cost_composition = f"{t('results.base_weapon')}: ₽{weapon_base_price:,} + {t('results.additional_mods')}: ₽{final_stats['total_price']:,}"
-        delta_val = final_stats['total_price']
+    total_cost = cost_data["total_cost"]
+    delta_val = cost_data["mods_cost"]
+    cost_composition = f"{cost_data['base_label']}: ₽{cost_data['base_cost']:,} + {t('results.additional_mods')}: ₽{cost_data['mods_cost']:,}"
 
     with col5:
         st.metric(
@@ -669,6 +721,14 @@ def generate_build_export(result, item_lookup, weapon_stats, presets, selected_g
 
 
 def main():
+    # Initialize Cookie Manager for persistent settings
+    # This must be done at the start of the app
+    cookie_manager = stx.CookieManager(key="main_cookie_manager")
+
+    # Helper to save cookies with 1 year expiration
+    def save_cookie(key, value):
+        cookie_manager.set(key, value, expires_at=datetime.now() + timedelta(days=365))
+
     logger.debug("Streamlit app main() started")
 
     # Language selector at top of sidebar
@@ -915,34 +975,7 @@ def main():
     st.sidebar.markdown("---")
     st.sidebar.header(f"👤 {t('sidebar.player_trader_access')}")
 
-    # Player level input
-    player_level = st.sidebar.number_input(
-        t("sidebar.player_level"),
-        min_value=1,
-        max_value=79,
-        value=79,
-        help=t("sidebar.player_level_help"),
-    )
-
-    # Flea market access - automatically disabled if player level < 15
-    flea_unlocked = player_level >= 15
-    if flea_unlocked:
-        flea_available = st.sidebar.checkbox(
-            t("sidebar.flea_market_access"),
-            value=True,
-            help=t("sidebar.flea_help"),
-        )
-    else:
-        flea_available = False
-        st.sidebar.checkbox(
-            t("sidebar.flea_market_access"),
-            value=False,
-            disabled=True,
-            help=t("sidebar.flea_unlocks_at_15"),
-        )
-        st.sidebar.caption(f"⚠️ {t('sidebar.flea_unlocks_at_15')}")
-
-    # Define traders with display names (only those who sell weapon mods)
+    # Define traders first (needed for cookie sync)
     traders = [
         ("prapor", "Prapor"),
         ("skier", "Skier"),
@@ -951,7 +984,74 @@ def main():
         ("jaeger", "Jaeger"),
     ]
 
-    # Initialize trader levels from session state
+    # Sync settings from cookies (run once when cookies are available)
+    cookies = cookie_manager.get_all()
+    
+    # Only run sync if not yet confirmed synced
+    if not st.session_state.get("cookies_synced", False):
+        # Proceed only if cookies are loaded (not None) and we find our keys
+        if cookies:
+            found_data = False
+            try:
+                if "player_level" in cookies:
+                    st.session_state.player_level = int(cookies["player_level"])
+                    found_data = True
+                
+                if "flea_available" in cookies:
+                    st.session_state.flea_available = str(cookies["flea_available"]).lower() == "true"
+                    found_data = True
+                    
+                for t_key, _ in traders:
+                    s_key = f"trader_{t_key}"
+                    if s_key in cookies:
+                        st.session_state[s_key] = int(cookies[s_key])
+                        found_data = True
+                        
+                # Only mark as synced and rerun if we actually loaded data
+                if found_data:
+                    st.session_state.cookies_synced = True
+                    st.rerun()
+                    
+            except Exception as e:
+                logger.error(f"Error syncing cookies: {e}")
+
+    # Player level input
+    player_level = st.sidebar.number_input(
+        t("sidebar.player_level"),
+        min_value=1,
+        max_value=79,
+        value=79,
+        key="player_level",
+        help=t("sidebar.player_level_help"),
+        on_change=lambda: save_cookie("player_level", st.session_state.player_level)
+    )
+
+    # Flea market access - automatically disabled if player level < 15
+    flea_unlocked = player_level >= 15
+    if flea_unlocked:
+        # If accessing for the first time without defaults, ensure key exists with default
+        if "flea_available" not in st.session_state:
+             st.session_state.flea_available = True
+             
+        flea_available = st.sidebar.checkbox(
+            t("sidebar.flea_market_access"),
+            value=True, # fallback if key missing
+            key="flea_available",
+            help=t("sidebar.flea_help"),
+            on_change=lambda: save_cookie("flea_available", st.session_state.flea_available)
+        )
+    else:
+        flea_available = False
+        st.sidebar.checkbox(
+            t("sidebar.flea_market_access"),
+            value=False,
+            disabled=True,
+            help=t("sidebar.flea_unlocks_at_15"),
+            key="flea_disabled_display" # Unique key to prevent conflict
+        )
+        st.sidebar.caption(f"⚠️ {t('sidebar.flea_unlocks_at_15')}")
+
+    # Initialize trader levels defaults if not present
     for trader_key, _ in traders:
         session_key = f"trader_{trader_key}"
         if session_key not in st.session_state:
@@ -966,11 +1066,15 @@ def main():
         preset_col1, preset_col2 = st.columns(2)
         if preset_col1.button(t("sidebar.all_ll1"), key="traders_ll1", use_container_width=True):
             for trader_key, _ in traders:
-                st.session_state[f"trader_{trader_key}"] = 1
+                key = f"trader_{trader_key}"
+                st.session_state[key] = 1
+                save_cookie(key, 1)
             st.rerun()
         if preset_col2.button(t("sidebar.all_ll4"), key="traders_ll4", use_container_width=True):
             for trader_key, _ in traders:
-                st.session_state[f"trader_{trader_key}"] = 4
+                key = f"trader_{trader_key}"
+                st.session_state[key] = 4
+                save_cookie(key, 4)
             st.rerun()
 
         st.markdown("---")
@@ -983,6 +1087,7 @@ def main():
                 options=[1, 2, 3, 4],
                 value=st.session_state[session_key],
                 key=session_key,
+                on_change=lambda k=session_key: save_cookie(k, st.session_state[k])
             )
 
     # Show summary of constraints
@@ -1180,83 +1285,212 @@ def main():
             if not frontier:
                 st.error(t("explore.no_feasible"))
             else:
-                ignore = ignore_map[explore_tradeoff]
+                # Store frontier in session state for click interactions
+                st.session_state.explore_frontier = frontier
+                st.session_state.explore_ignore = ignore_map[explore_tradeoff]
+                st.session_state.explore_weapon_id = weapon_id
+                st.session_state.explore_selected_idx = None  # Clear selection on new exploration
+                st.session_state.explore_constraints = {
+                    "max_price": max_price,
+                    "min_ergonomics": min_ergonomics,
+                    "max_recoil_v": max_recoil_v,
+                    "min_mag_capacity": min_mag_capacity,
+                    "min_sighting_range": min_sighting_range,
+                    "max_weight": max_weight,
+                    "trader_levels": trader_levels,
+                    "flea_available": flea_available,
+                    "player_level": player_level,
+                }
 
-                if ignore == "price":
-                    chart_x, chart_y = t("chart.ergonomics"), t("chart.recoil_v")
-                    x_data = [p["ergo"] for p in frontier]
-                    y_data = [p["recoil_v"] for p in frontier]
-                    tip = t("explore.tip_recoil_at_ergo")
-                elif ignore == "recoil":
-                    chart_x, chart_y = t("chart.ergonomics"), t("chart.price")
-                    x_data = [p["ergo"] for p in frontier]
-                    y_data = [p["price"] for p in frontier]
-                    tip = t("explore.tip_price_at_ergo")
-                else:
-                    chart_x, chart_y = t("chart.recoil_v"), t("chart.price")
-                    x_data = [p["recoil_v"] for p in frontier]
-                    y_data = [p["price"] for p in frontier]
-                    tip = t("explore.tip_price_at_recoil")
-
-                # Show active constraints
-                constraints = []
-                if max_price:
-                    constraints.append(t("constraints.budget_le", value=f"{max_price:,}"))
-                if min_ergonomics:
-                    constraints.append(t("constraints.ergo_ge", value=min_ergonomics))
-                if max_recoil_v:
-                    constraints.append(t("constraints.recoil_le", value=max_recoil_v))
-                if min_mag_capacity:
-                    constraints.append(f"{t('constraints.min_mag')}: {min_mag_capacity}")
-                if min_sighting_range:
-                    constraints.append(f"{t('constraints.min_sight')}: {min_sighting_range}")
-                if max_weight:
-                    constraints.append(f"{t('constraints.max_weight')}: {max_weight}")
-
-                if constraints:
-                    st.info(f"{t('explore.active_constraints')}: {', '.join(constraints)}")
-
-                # Line chart
-                chart_df = pd.DataFrame({chart_x: x_data, chart_y: y_data})
-                chart = alt.Chart(chart_df).mark_line(point=True).encode(
-                    x=alt.X(chart_x, scale=alt.Scale(zero=False)),
-                    y=alt.Y(chart_y, scale=alt.Scale(zero=False)),
-                    tooltip=[chart_x, chart_y]
-                ).properties(height=300)
-                st.altair_chart(chart, width="stretch")
-
-                # Display as sortable table
-                col_ergo = t("table.ergo")
-                col_recoil_pct = t("table.recoil_pct")
-                col_recoil_v = t("table.recoil_v")
-                col_recoil_h = t("table.recoil_h")
-                col_price = t("table.price")
-
-                frontier_df = pd.DataFrame([
-                    {
-                        col_ergo: point["ergo"],
-                        col_recoil_pct: f"{point['recoil_pct']:+.1f}%",
-                        col_recoil_v: round(point["recoil_v"], 1),
-                        col_recoil_h: round(point["recoil_h"], 1),
-                        col_price: point["price"],
-                    }
-                    for point in frontier
-                ])
-
-                st.dataframe(
-                    frontier_df,
-                    column_config={
-                        col_ergo: st.column_config.NumberColumn(col_ergo, format="%.1f"),
-                        col_recoil_pct: st.column_config.TextColumn(col_recoil_pct),
-                        col_recoil_v: st.column_config.NumberColumn(col_recoil_v, format="%.1f"),
-                        col_recoil_h: st.column_config.NumberColumn(col_recoil_h, format="%.1f"),
-                        col_price: st.column_config.NumberColumn(col_price, format="₽%,d"),
-                    },
-                    hide_index=True,
-                    width="stretch",
+        # Display frontier if available in session state
+        if "explore_frontier" in st.session_state and st.session_state.get("explore_weapon_id") == weapon_id:
+            frontier = st.session_state.explore_frontier
+            
+            # Recalculate prices ensuring consistency between graph and detail view
+            for point in frontier:
+                cost_data = calculate_build_cost(
+                    point["selected_items"],
+                    point.get("selected_preset"),
+                    item_lookup,
+                    weapon_stats,
+                    presets,
+                    selected_gun
                 )
+                point["price"] = cost_data["total_cost"]
+                
+            ignore = st.session_state.explore_ignore
+            stored_constraints = st.session_state.explore_constraints
 
-                st.caption(tip)
+            if ignore == "price":
+                chart_x, chart_y = t("chart.ergonomics"), t("chart.recoil_v")
+                x_data = [p["ergo"] for p in frontier]
+                y_data = [p["recoil_v"] for p in frontier]
+                tip = t("explore.tip_recoil_at_ergo")
+            elif ignore == "recoil":
+                chart_x, chart_y = t("chart.ergonomics"), t("chart.price")
+                x_data = [p["ergo"] for p in frontier]
+                y_data = [p["price"] for p in frontier]
+                tip = t("explore.tip_price_at_ergo")
+            else:
+                chart_x, chart_y = t("chart.recoil_v"), t("chart.price")
+                x_data = [p["recoil_v"] for p in frontier]
+                y_data = [p["price"] for p in frontier]
+                tip = t("explore.tip_price_at_recoil")
+
+            # Show active constraints
+            constraints_display = []
+            if stored_constraints.get("max_price"):
+                constraints_display.append(t("constraints.budget_le", value=f"{stored_constraints['max_price']:,}"))
+            if stored_constraints.get("min_ergonomics"):
+                constraints_display.append(t("constraints.ergo_ge", value=stored_constraints['min_ergonomics']))
+            if stored_constraints.get("max_recoil_v"):
+                constraints_display.append(t("constraints.recoil_le", value=stored_constraints['max_recoil_v']))
+            if stored_constraints.get("min_mag_capacity"):
+                constraints_display.append(f"{t('constraints.min_mag')}: {stored_constraints['min_mag_capacity']}")
+            if stored_constraints.get("min_sighting_range"):
+                constraints_display.append(f"{t('constraints.min_sight')}: {stored_constraints['min_sighting_range']}")
+            if stored_constraints.get("max_weight"):
+                constraints_display.append(f"{t('constraints.max_weight')}: {stored_constraints['max_weight']}")
+
+            if constraints_display:
+                st.info(f"{t('explore.active_constraints')}: {', '.join(constraints_display)}")
+
+            # Create Plotly chart with click selection
+            fig = go.Figure()
+
+            # Add line connecting points
+            fig.add_trace(go.Scatter(
+                x=x_data,
+                y=y_data,
+                mode='lines',
+                line=dict(color='rgba(99, 110, 250, 0.5)', width=2),
+                hoverinfo='skip',
+                showlegend=False,
+            ))
+
+            # Add clickable points with index as custom data
+            hover_texts = [
+                f"{chart_x}: {x}<br>{chart_y}: {y:,.0f}" if isinstance(y, (int, float)) and y > 1000 
+                else f"{chart_x}: {x}<br>{chart_y}: {y}"
+                for x, y in zip(x_data, y_data)
+            ]
+            
+            fig.add_trace(go.Scatter(
+                x=x_data,
+                y=y_data,
+                mode='markers',
+                marker=dict(size=12, color='rgb(99, 110, 250)', line=dict(width=2, color='white')),
+                hovertemplate='%{hovertext}<extra></extra>',
+                hovertext=hover_texts,
+                customdata=list(range(len(frontier))),
+                showlegend=False,
+            ))
+
+            # Highlight selected point if any
+            selected_idx = st.session_state.get("explore_selected_idx")
+            if selected_idx is not None and 0 <= selected_idx < len(frontier):
+                fig.add_trace(go.Scatter(
+                    x=[x_data[selected_idx]],
+                    y=[y_data[selected_idx]],
+                    mode='markers',
+                    marker=dict(size=18, color='red', symbol='circle', line=dict(width=2, color='white')),
+                    hoverinfo='skip',
+                    showlegend=False,
+                ))
+
+            fig.update_layout(
+                xaxis_title=chart_x,
+                yaxis_title=chart_y,
+                height=350,
+                margin=dict(l=50, r=20, t=20, b=50),
+                xaxis=dict(zeroline=False),
+                yaxis=dict(zeroline=False),
+            )
+
+            # Display chart with click selection
+            event = st.plotly_chart(
+                fig,
+                use_container_width=True,
+                on_select="rerun",
+                selection_mode="points",
+                key="pareto_frontier_chart",
+            )
+
+            # Handle click events
+            if event and event.selection and event.selection.get("points"):
+                point = event.selection["points"][0]
+                if "customdata" in point:
+                    clicked_idx = point["customdata"]
+                    if clicked_idx != st.session_state.get("explore_selected_idx"):
+                        st.session_state.explore_selected_idx = clicked_idx
+                        st.rerun()
+
+            # Display as sortable table
+            col_ergo = t("table.ergo")
+            col_recoil_pct = t("table.recoil_pct")
+            col_recoil_v = t("table.recoil_v")
+            col_recoil_h = t("table.recoil_h")
+            col_price = t("table.price")
+
+            frontier_df = pd.DataFrame([
+                {
+                    col_ergo: point["ergo"],
+                    col_recoil_pct: f"{point['recoil_pct']:+.1f}%",
+                    col_recoil_v: round(point["recoil_v"], 1),
+                    col_recoil_h: round(point["recoil_h"], 1),
+                    col_price: point["price"],
+                }
+                for point in frontier
+            ])
+
+            st.dataframe(
+                frontier_df,
+                column_config={
+                    col_ergo: st.column_config.NumberColumn(col_ergo, format="%.1f"),
+                    col_recoil_pct: st.column_config.TextColumn(col_recoil_pct),
+                    col_recoil_v: st.column_config.NumberColumn(col_recoil_v, format="%.1f"),
+                    col_recoil_h: st.column_config.NumberColumn(col_recoil_h, format="%.1f"),
+                    col_price: st.column_config.NumberColumn(col_price, format="₽ %d"),
+                },
+                hide_index=True,
+                use_container_width=True,
+            )
+
+            st.caption(tip)
+
+            # Display build details for selected point
+            if selected_idx is not None and 0 <= selected_idx < len(frontier):
+                st.markdown("---")
+                st.subheader(f"🔧 {t('explore.selected_build')}")
+                
+                selected_point = frontier[selected_idx]
+                
+                # Build a result dict compatible with display_optimization_results
+                result = {
+                    "status": selected_point.get("status", "optimal"),
+                    "selected_items": selected_point.get("selected_items", []),
+                    "selected_preset": selected_point.get("selected_preset"),
+                    "objective_value": 0,  # Not applicable for Pareto exploration points
+                }
+                
+                # Build constraints dict for display
+                display_constraints = {
+                    "max_price": stored_constraints.get("max_price"),
+                    "min_ergonomics": stored_constraints.get("min_ergonomics"),
+                    "max_recoil_v": stored_constraints.get("max_recoil_v"),
+                    "min_mag_capacity": stored_constraints.get("min_mag_capacity"),
+                    "min_sighting_range": stored_constraints.get("min_sighting_range"),
+                    "max_weight": stored_constraints.get("max_weight"),
+                    "trader_levels": stored_constraints.get("trader_levels"),
+                    "flea_available": stored_constraints.get("flea_available"),
+                    "player_level": stored_constraints.get("player_level"),
+                }
+                
+                display_optimization_results(
+                    result, item_lookup, weapon_stats, presets, selected_gun, display_constraints
+                )
+            else:
+                st.info(f"💡 {t('explore.click_point_hint')}")
 
     # ==================== OPTIMIZE TAB ====================
     with tab_optimize:

@@ -74,7 +74,9 @@
     "select_build": "Select a build from the chart or table to view details",
     "tip_recoil_at_ergo": "Each row shows the best recoil at that ergo level.",
     "tip_price_at_ergo": "Each row shows the lowest price at that ergo level.",
-    "tip_price_at_recoil": "Each row shows the lowest price at that recoil level."
+    "tip_price_at_recoil": "Each row shows the lowest price at that recoil level.",
+    "selected_build": "Selected Build Details",
+    "click_point_hint": "Click a point on the chart to view the build details"
   },
   "optimize": {
     "header": "Optimize Your Build",
