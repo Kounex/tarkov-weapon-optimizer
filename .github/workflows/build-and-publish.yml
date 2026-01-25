@@ -44,7 +44,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
-            type=raw,value=${{ steps.get_version.outputs.VERSION }}
+            type=raw,value=${{ steps.get_version.outputs.VERSION }},priority=50
             type=raw,value=latest
             type=sha
 

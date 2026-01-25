@@ -2,7 +2,7 @@
 from PyInstaller.utils.hooks import collect_all
 from PyInstaller.utils.hooks import copy_metadata
 
-datas = [('locales', 'locales'), ('tasks.json', '.'), ('app.py', '.'), ('weapon_optimizer.py', '.'), ('i18n.py', '.'), ('queries.py', '.')]
+datas = [('locales', 'locales'), ('tasks.json', '.'), ('app.py', '.'), ('src', 'src'), ('i18n.py', '.')]
 binaries = []
 hiddenimports = []
 
