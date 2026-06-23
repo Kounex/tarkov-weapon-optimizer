@@ -80,6 +80,7 @@ frontend/dist/
 .env.*
 !.env.example
 .streamlit/secrets.toml
+.dev.vars
 
 # --- OS & junk ---
 .DS_Store

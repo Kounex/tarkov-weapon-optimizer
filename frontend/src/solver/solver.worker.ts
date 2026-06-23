@@ -108,6 +108,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
               return {
                 id: mid,
                 name: itemData.name as string,
+                shortName: (itemData.shortName as string) ?? '',
                 category: 'category' in item.stats ? item.stats.category : 'Unknown',
                 category_id: 'category_id' in item.stats ? String(item.stats.category_id) : '',
                 category_normalized: st.category_normalized ?? '',
@@ -117,6 +118,8 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
                 capacity: st.capacity ?? 0,
                 accuracy_modifier: st.accuracy_modifier ?? 0,
                 base_moa: (st.center_of_impact ?? 0) * MOA_K,
+                price: st.price ?? 0,
+                conflicting_item_ids: 'conflicting_items' in item ? (item as { conflicting_items: string[] }).conflicting_items : [],
               };
             })
             .filter(Boolean)

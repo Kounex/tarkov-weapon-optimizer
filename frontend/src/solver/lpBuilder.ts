@@ -87,6 +87,27 @@ export function buildLP(params: SolveParams): LPResult {
   const excludeItemSet = new Set(params.excludeItems ?? []);
   const excludeCatSet = new Set(params.excludeCategories ?? []);
   const includeItemSet = new Set(params.includeItems ?? []);
+  const userForcedItems = new Set(includeItemSet);
+
+  // Expand includeItemSet with ancestor mods in the slot graph.
+  // Locked mods are already owned, but their parent mods (e.g. the upper
+  // receiver that hosts a barrel) might be filtered out by trader/flea
+  // availability.  Walking up the slot chain ensures the full connectivity
+  // path stays in the model.
+  if (includeItemSet.size > 0) {
+    const queue = [...includeItemSet];
+    while (queue.length > 0) {
+      const id = queue.pop()!;
+      for (const [sid, items] of Object.entries(slotItems)) {
+        if (!items.includes(id)) continue;
+        const owner = slotOwner[sid];
+        if (owner && owner !== weaponId && !includeItemSet.has(owner)) {
+          includeItemSet.add(owner);
+          queue.push(owner);
+        }
+      }
+    }
+  }
 
   // ========================================================================
   // 1. Build preset maps (mirrors CP-SAT)
@@ -303,7 +324,7 @@ export function buildLP(params: SolveParams): LPResult {
         const ref = ms.reference_price_rub ?? 0;
         item_price_objective.push(Math.round(Math.max(ref, UNPURCHASABLE_OBJECTIVE_PRICE_MIN_RUB)));
       }
-      item_available.push(itemPrices[iid]?.[2] ? 1 : 0);
+      item_available.push((itemPrices[iid]?.[2] || userForcedItems.has(iid)) ? 1 : 0);
       item_weight_g.push(Math.round((ms.weight ?? 0) * 1000));
       item_capacity.push(ms.capacity ?? 0);
       item_sighting_range.push(ms.sighting_range ?? 0);

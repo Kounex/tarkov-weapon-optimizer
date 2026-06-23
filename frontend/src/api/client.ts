@@ -128,6 +128,7 @@ export type GameMode = 'regular' | 'pve';
 export interface ModInfo {
   id: string;
   name: string;
+  shortName: string;
   category: string;
   /** BSG category id — must match solver `category_id` (not display name). */
   category_id: string;
@@ -139,6 +140,10 @@ export interface ModInfo {
   accuracy_modifier?: number;
   /** Barrel-only: centerOfImpact × MOA_K (MOA units). Replaces weapon base_moa when installed. */
   base_moa?: number;
+  /** Cheapest available price in RUB (0 if not purchasable). */
+  price?: number;
+  /** IDs of items that conflict with this mod. */
+  conflicting_item_ids?: string[];
 }
 
 export interface ModCategoryOption {

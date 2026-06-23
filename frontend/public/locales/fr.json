@@ -26,7 +26,8 @@
   "tabs": {
     "explore": "Explorer",
     "optimize": "Optimiser",
-    "gunsmith": "Armurier"
+    "gunsmith": "Armurier",
+    "import": "Import"
   },
   "gunsmith": {
     "select_task": "Sélectionner la tâche",
@@ -190,5 +191,35 @@
     "peacekeeper": "Peacekeeper",
     "mechanic": "Mechanic",
     "jaeger": "Jaeger"
+  },
+  "import": {
+    "api_key_title": "Gemini API Key",
+    "api_key_set": "Configured",
+    "api_key_missing": "Not set",
+    "api_key_help": "Get a free API key from Google AI Studio (aistudio.google.com). Your key is stored locally in the browser and never sent to our servers.",
+    "screenshot_title": "Screenshot",
+    "upload_hint": "Drop a weapon inspect screenshot here, or click to upload",
+    "preview": "Preview",
+    "clear": "Clear",
+    "extract_btn": "Analyze Screenshot",
+    "extracting": "Analyzing...",
+    "detected_weapon": "Detected Weapon",
+    "detected_mods": "Detected Mods",
+    "not_found": "Not found",
+    "weapon_not_matched": "Could not identify weapon — please select manually below",
+    "matched_from": "Matched from",
+    "no_match": "No match found",
+    "locked": "locked",
+    "lock_tooltip": "Lock — keep this part in the optimized build",
+    "unlock_tooltip": "Unlock — let optimizer replace this part",
+    "ready_description": "Upload a weapon inspect screenshot to identify installed mods and optimize around them",
+    "ready_with_screenshot": "{{count}} mods locked — click to optimize keeping your parts",
+    "optimize_btn": "Optimize with Locked Parts",
+    "kept_parts": "{{count}} kept",
+    "upgrade_budget_title": "Upgrade Budget",
+    "upgrade_budget_help": "Limit how much you're willing to spend on new/replacement parts. Locked mods are treated as already owned — only new parts count toward this budget.",
+    "upgrade_budget_enable": "Limit upgrade spend",
+    "locked_mods_cost": "Owned parts: ₽{{cost}}",
+    "locked_mods_cost_tooltip": "Estimated market value of your locked mods — added to your upgrade budget to compute the solver's total price cap"
   }
 }

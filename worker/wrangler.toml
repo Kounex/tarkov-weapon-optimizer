@@ -1,0 +1,9 @@
+name = "tarkov-vision-proxy"
+main = "src/index.ts"
+compatibility_date = "2024-01-01"
+
+[vars]
+ALLOWED_ORIGIN = "https://ahaimk01.github.io"
+
+# Set your Gemini key as a secret (never in code):
+#   npx wrangler secret put GEMINI_API_KEY

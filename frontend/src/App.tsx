@@ -3,7 +3,7 @@ declare const __APP_VERSION__: string;
 import { useState, useEffect, useMemo, useRef, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ConfigProvider, Layout, Select, Segmented, Spin, message, App as AntApp, theme, Typography, Tag, Space, Grid, Dropdown, Button, Tooltip } from 'antd'
-import { ThunderboltOutlined, BarChartOutlined, ToolOutlined, MoonOutlined, MenuOutlined, BlockOutlined, GithubOutlined, CloudOutlined, HistoryOutlined, ReloadOutlined } from '@ant-design/icons'
+import { ThunderboltOutlined, BarChartOutlined, ToolOutlined, MoonOutlined, MenuOutlined, BlockOutlined, GithubOutlined, CloudOutlined, HistoryOutlined, ReloadOutlined, ImportOutlined } from '@ant-design/icons'
 import { getInfo, optimize, explore, getWeaponMods, getGunsmithTasks, computeMOAFloor, clearDataCache } from './api/client'
 import type { Gun, OptimizeResponse, ModInfo, ModCategoryOption, ExplorePoint, GunsmithTask, GameMode, SolverPrecisionMode } from './api/client'
 import { ResponsiveLayout } from './layouts/ResponsiveLayout'
@@ -14,6 +14,8 @@ import { ExplorePanel } from './components/explore/ExplorePanel'
 import { ExploreResult } from './components/explore/ExploreResult'
 import { GunsmithPanel } from './components/gunsmith/GunsmithPanel'
 import { GunsmithResult } from './components/gunsmith/GunsmithResult'
+import { ImportPanel } from './components/import/ImportPanel'
+import { ImportSidebar } from './components/import/ImportSidebar'
 import 'flag-icons/css/flag-icons.min.css'
 import { amoledDarkToken } from './theme/amoledDark'
 import { darkPaletteTokens, type DarkPaletteId } from './theme/darkPalettes'
@@ -265,6 +267,23 @@ function AppContent({
   const modsRequestSeq = useRef(0)
   const [changelogOpen, setChangelogOpen] = useState(false)
   const [refreshing, setRefreshing] = useState(false)
+  const [importLockedIds, setImportLockedIds] = useState<string[]>([])
+  const [importResult, setImportResult] = useState<OptimizeResponse | null>(null)
+  const [optimizingImport, setOptimizingImport] = useState(false)
+  const [importErgoWeight, setImportErgoWeight] = useState(33)
+  const [importRecoilWeight, setImportRecoilWeight] = useState(34)
+  const [importPriceWeight, setImportPriceWeight] = useState(33)
+  const [importMinErgo, setImportMinErgo] = useState(0)
+  const [useUpgradeBudget, setUseUpgradeBudget] = useState(false)
+  const [upgradeBudget, setUpgradeBudget] = useState(50000)
+
+  const importLockedModsCost = useMemo(() => {
+    return importLockedIds.reduce((sum, id) => {
+      const mod = availableMods.find(m => m.id === id)
+      return sum + (mod?.price ?? 0)
+    }, 0)
+  }, [importLockedIds, availableMods])
+
   const messageApiRef = useRef(messageApi)
   messageApiRef.current = messageApi
 
@@ -675,6 +694,73 @@ function AppContent({
     setUseMinMag(false)
   }
 
+  const handleImportOptimize = async () => {
+    if (!selectedGunId) return
+    setOptimizingImport(true)
+    try {
+      // Compute effective maxPrice: locked items' cost + upgrade budget
+      let effectiveMaxPrice: number | undefined
+      if (useUpgradeBudget) {
+        const lockedCost = importLockedIds.reduce((sum, id) => {
+          const mod = availableMods.find(m => m.id === id)
+          return sum + (mod?.price ?? 0)
+        }, 0)
+        effectiveMaxPrice = lockedCost + upgradeBudget
+      }
+
+      const res = await optimize({
+        weapon_id: selectedGunId,
+        ergo_weight: importErgoWeight,
+        recoil_weight: importRecoilWeight,
+        price_weight: importPriceWeight,
+        max_price: effectiveMaxPrice,
+        min_ergonomics: importMinErgo > 0 ? importMinErgo : undefined,
+        include_items: importLockedIds.length > 0 ? importLockedIds : undefined,
+        trader_levels: traderLevels,
+        player_level: playerLevel,
+        flea_available: fleaAvailable,
+        barter_available: barterAvailable,
+        barter_exclude_dogtags: barterExcludeDogtags,
+        precise_mode: solverPrecision,
+      }, gameMode, i18n.language || 'en')
+      setImportResult(res)
+      if (res.status === 'optimal') {
+        messageApi.success(t('toast.optimize_success'))
+      } else if (res.status === 'infeasible') {
+        const base = t('toast.optimize_infeasible')
+        messageApi.error(res.reason ? `${base} (${res.reason})` : base)
+      } else {
+        messageApi.warning(t('toast.optimize_non_optimal', { status: res.status }))
+      }
+    } catch (err) {
+      console.error('Import optimization failed', err)
+      messageApi.error(t('toast.optimize_failed'))
+    } finally {
+      setOptimizingImport(false)
+    }
+  }
+
+  const handleImportLockedIdsChange = (ids: string[]) => {
+    setImportLockedIds(ids)
+  }
+
+  const copyImportBuild = () => {
+    if (!importResult || !importResult.final_stats) return
+    const lines = [
+      `${selectedGun?.name} - ${t('ui.build_manifest')} (${t('tabs.import')})`,
+      '',
+      `${t('sidebar.ergonomics')}: ${importResult.final_stats.ergonomics.toFixed(1)} | ${t('ui.vert_recoil')}: ${importResult.final_stats.recoil_vertical.toFixed(1)} | ${t('ui.horiz_recoil')}: ${importResult.final_stats.recoil_horizontal.toFixed(1)} | ${t('ui.weight_label')}: ${importResult.final_stats.total_weight.toFixed(2)}kg | ${t('ui.total_cost')}: ~ ₽${importResult.final_stats.total_price.toLocaleString()}`,
+      '',
+      `${t('ui.table_items')}:`,
+      ...importResult.selected_items.map(i => i.name)
+    ]
+    copyToClipboard(lines.join('\n'))
+  }
+
+  const toggleImportLock = (id: string) => {
+    setImportLockedIds(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id])
+  }
+
   const commonPanelProps = {
     guns,
     selectedGunId,
@@ -835,6 +921,64 @@ function AppContent({
         />
       ),
     },
+    {
+      key: 'import',
+      label: <span style={{ userSelect: 'none' }}><ImportOutlined /> {t('tabs.import')}</span>,
+      children: (
+        <ResponsiveLayout
+          left={
+            <ImportSidebar
+              ergoWeight={importErgoWeight}
+              recoilWeight={importRecoilWeight}
+              priceWeight={importPriceWeight}
+              onWeightChange={(e, r, p) => { setImportErgoWeight(e); setImportRecoilWeight(r); setImportPriceWeight(p) }}
+              useUpgradeBudget={useUpgradeBudget}
+              onUseUpgradeBudgetChange={setUseUpgradeBudget}
+              upgradeBudget={upgradeBudget}
+              onUpgradeBudgetChange={setUpgradeBudget}
+              minErgo={importMinErgo}
+              onMinErgoChange={setImportMinErgo}
+              fleaAvailable={fleaAvailable}
+              onFleaChange={setFleaAvailable}
+              barterAvailable={barterAvailable}
+              onBarterChange={setBarterAvailable}
+              barterExcludeDogtags={barterExcludeDogtags}
+              onBarterExcludeDogsChange={setBarterExcludeDogtags}
+              playerLevel={playerLevel}
+              onPlayerLevelChange={setPlayerLevel}
+              traderLevels={traderLevels}
+              onTraderLevelsChange={setTraderLevels}
+              lockedModsCost={importLockedModsCost}
+            />
+          }
+          right={
+            <ImportPanel
+              guns={guns}
+              selectedGunId={selectedGunId}
+              onGunChange={handleGunChange}
+              selectedCategory={selectedCategory}
+              onCategoryChange={setSelectedCategory}
+              selectedCaliber={selectedCaliber}
+              onCaliberChange={setSelectedCaliber}
+              categories={categories}
+              calibers={calibers}
+              filteredGuns={filteredGuns}
+              availableMods={availableMods}
+              loadingMods={loadingMods}
+              onLockedIdsChange={handleImportLockedIdsChange}
+              result={importResult}
+              optimizing={optimizingImport}
+              onOptimize={handleImportOptimize}
+              onCopy={copyImportBuild}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              lockedIds={importLockedIds}
+              onToggleLock={toggleImportLock}
+            />
+          }
+        />
+      ),
+    },
   ]
 
   const mainModeAccent = useMemo(() => {
@@ -843,6 +987,8 @@ function AppContent({
         return { primary: token.colorInfo, bg: token.colorInfoBg, border: token.colorInfo }
       case 'gunsmith':
         return { primary: token.colorSuccess, bg: token.colorSuccessBg, border: token.colorSuccess }
+      case 'import':
+        return { primary: token.colorPrimary, bg: token.colorPrimaryBg, border: token.colorPrimary }
       default:
         return { primary: token.colorWarning, bg: token.colorWarningBg, border: token.colorWarning }
     }
@@ -871,6 +1017,10 @@ function AppContent({
     {
       value: 'gunsmith',
       label: <span style={{ userSelect: 'none', whiteSpace: 'nowrap' }}><ToolOutlined /> {t('tabs.gunsmith')}</span>,
+    },
+    {
+      value: 'import',
+      label: <span style={{ userSelect: 'none', whiteSpace: 'nowrap' }}><ImportOutlined /> {t('tabs.import')}</span>,
     },
   ]
 
