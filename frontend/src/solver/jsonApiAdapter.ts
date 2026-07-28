@@ -16,10 +16,11 @@
  *
  * Flea market note: neither API exposes individual active listings. The best
  * available proxy for "cheapest current listing" is the item's `lastLowPrice`,
- * and the best availability signal is `lastOfferCount > 0`. We synthesize a
- * GraphQL-style flea `buyFor` offer from those two fields, and only when
- * `lastOfferCount > 0` — items with no active offers are treated as
- * flea-unavailable (mirrored on the GraphQL path in dataService).
+ * and availability is gated on `lastOfferCount > 0` AND the item NOT carrying
+ * the `noFlea` type flag (flea-banned items can still report nonzero offer
+ * counts). We synthesize a GraphQL-style flea `buyFor` offer from those fields
+ * — items failing either check are treated as flea-unavailable (mirrored on
+ * the GraphQL path in dataService).
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -29,8 +30,8 @@ const JSON_API_BASE = 'https://json.tarkov.dev';
 
 /** Image/scalar fields copied verbatim when present (downstream uses ?? chains). */
 const SCALAR_FIELDS = [
-  'id', 'normalizedName', 'basePrice', 'avg24hPrice', 'lastLowPrice', 'lastOfferCount',
-  'minLevelForFlea', 'weight', 'width', 'height',
+  'id', 'normalizedName', 'types', 'basePrice', 'avg24hPrice', 'lastLowPrice', 'low24hPrice',
+  'lastOfferCount', 'updated', 'minLevelForFlea', 'weight', 'width', 'height',
   'accuracyModifier', 'ergonomicsModifier', 'recoilModifier', 'conflictingSlotIds',
   'iconLink', 'image8xLink', 'image512pxLink', 'inspectImageLink', 'baseImageLink', 'gridImageLink',
 ] as const;
@@ -113,7 +114,12 @@ function buildBuyFor(raw: RawItem, ctx: JsonApiContext): RawItem[] {
       },
     });
   }
-  if ((raw.lastOfferCount ?? 0) > 0 && (raw.lastLowPrice ?? 0) > 0) {
+  // Flea availability: `lastOfferCount > 0` alone is NOT reliable — noFlea
+  // (flea-banned) items can still report a nonzero count. The noFlea type flag
+  // takes precedence; dataService.fleaMarketSignals applies the same rules on
+  // the GraphQL path.
+  const types: string[] = raw.types ?? [];
+  if (!types.includes('noFlea') && (raw.lastOfferCount ?? 0) > 0 && (raw.lastLowPrice ?? 0) > 0) {
     buyFor.push({
       currency: 'RUB',
       price: raw.lastLowPrice,
@@ -154,10 +160,11 @@ function adaptPreset(raw: RawItem, ctx: JsonApiContext): RawItem {
     buyFor: buildBuyFor(raw, ctx),
     bartersFor: ctx.bartersByOfferedItem.get(raw.id) ?? [],
   };
+  // Copy all scalar fields (images + lastLowPrice/low24hPrice/lastOfferCount/
+  // avg24hPrice/updated/types) — fleaMarketSignals in dataService reads them
+  // off the preset for pricing, availability, and the unstable flag.
   for (const f of SCALAR_FIELDS) {
-    if (f.startsWith('icon') || f.includes('Image') || f.includes('image')) {
-      if (raw[f] != null) preset[f] = raw[f];
-    }
+    if (f !== 'id' && raw[f] != null) preset[f] = raw[f];
   }
   return preset;
 }

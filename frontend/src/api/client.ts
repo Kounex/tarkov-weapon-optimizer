@@ -66,6 +66,12 @@ export interface ItemDetail {
   ergonomics: number;
   recoil_modifier: number;
   barter_requirements?: Array<{ name: string; count: number; unit_price: number; icon?: string }>;
+  /** Flea purchases only: <=3 active listings at fetch time */
+  scarce?: boolean;
+  /** Flea purchases only: price data older than 24h */
+  stale?: boolean;
+  /** Flea purchases only: price deviates >2.5x from the 24h average */
+  price_unstable?: boolean;
   // Tooltip extras
   image_large?: string;
   accuracy_modifier?: number;
@@ -87,6 +93,12 @@ export interface PresetDetail {
   /** Human-readable seller for the preset price (e.g. "Prapor", "Flea Market") */
   purchase_label?: string;
   barter_requirements?: Array<{ name: string; count: number; unit_price: number; icon?: string }>;
+  /** Flea purchases only: <=3 active listings at fetch time */
+  scarce?: boolean;
+  /** Flea purchases only: price data older than 24h */
+  stale?: boolean;
+  /** Flea purchases only: price deviates >2.5x from the 24h average */
+  price_unstable?: boolean;
   // Tooltip extras
   image_large?: string;
   caliber?: string;

@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 import { Card, Tag, Typography, message, Grid, Tooltip, Collapse, Space, Table } from 'antd'
-import { TraderIcon, ItemRow, ItemTooltip } from '../ItemRow'
+import { TraderIcon, ItemRow, ItemTooltip, FleaBadges } from '../ItemRow'
 import type { OptimizeResponse, ItemDetail } from '../../api/client'
 
 const { Text } = Typography
@@ -74,6 +74,7 @@ export function UsingPresetCard({ preset, retainedItems, compactMode, viewMode }
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
           <TraderIcon source={preset.source} unknownLabel={unknown} barterRequirements={preset.barter_requirements} />
+          <FleaBadges item={preset} />
           <Tag color="gold" style={{ margin: 0, fontWeight: 600 }}>₽{preset.price.toLocaleString()}</Tag>
         </div>
       </div>

@@ -8,6 +8,24 @@ import type { SolveParams, GunLookupEntry } from './types';
 export type { SolveParams } from './types';
 import { buildLP, MOA_K } from './lpBuilder';
 import { getAvailablePrice } from './dataService';
+import type { OfferInfo } from './types';
+
+/** Flea price data older than 24h counts as stale (defensive on bad/missing timestamps). */
+function isStaleTimestamp(updated: string | undefined): boolean {
+  if (!updated) return false;
+  const ts = Date.parse(updated);
+  if (Number.isNaN(ts)) return false;
+  return Date.now() - ts > 24 * 3600 * 1000;
+}
+
+/** Map a flea offer's API signals onto UI badge flags (scarce / stale / unstable). */
+function fleaBadgeFlags(offer: OfferInfo): { scarce?: boolean; stale?: boolean; price_unstable?: boolean } {
+  return {
+    scarce: typeof offer.last_offer_count === 'number' && offer.last_offer_count <= 3 ? true : undefined,
+    stale: isStaleTimestamp(offer.updated) || undefined,
+    price_unstable: offer.price_unstable || undefined,
+  };
+}
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 let highs: any = null;
@@ -179,6 +197,10 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
         buyPrice += price;
         detail.source = src ?? undefined;
         detail.price = price;
+        if (src === 'fleaMarket' && entry.stats.offers) {
+          const offer = entry.stats.offers.find(o => o.source === 'fleaMarket');
+          if (offer) Object.assign(detail, fleaBadgeFlags(offer));
+        }
         if (src?.startsWith('barter:') && entry.stats.offers) {
           const offer = entry.stats.offers.find(o => o.source === src);
           if (offer?.barter_requirements) {
@@ -238,6 +260,9 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
           const offer = preset.offers.find(o => o.source === source);
           if (offer?.barter_requirements) presetBarterReqs = offer.barter_requirements;
         }
+        const presetFleaOffer = source === 'fleaMarket'
+          ? preset.offers?.find(o => o.source === 'fleaMarket')
+          : undefined;
         presetDetail = {
           id: preset.id,
           name: preset.name,
@@ -249,6 +274,7 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
           purchase_label: label,
           barter_requirements: presetBarterReqs,
           parts_count: preset.items?.length || undefined,
+          ...(presetFleaOffer ? fleaBadgeFlags(presetFleaOffer) : {}),
           ...weaponTooltip,
         };
       }

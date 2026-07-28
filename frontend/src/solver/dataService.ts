@@ -15,7 +15,7 @@ import { DEFAULT_TRADER_LEVELS } from './types.ts';
 import { fetchFromJsonApi } from './jsonApiAdapter.ts';
 
 const API_URL = 'https://api.tarkov.dev/graphql';
-const CACHE_VERSION = 16;
+const CACHE_VERSION = 17;
 const CACHE_TTL_MS = 3600 * 1000; // 1 hour
 const DB_NAME = 'tarkov-optimizer-cache';
 const DB_VERSION = 1;
@@ -30,7 +30,10 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
     basePrice
     avg24hPrice
     lastLowPrice
+    low24hPrice
     lastOfferCount
+    updated
+    types
     buyFor {
       currency
       priceRUB
@@ -99,7 +102,11 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
           name
           shortName
           lastLowPrice
+          low24hPrice
           lastOfferCount
+          avg24hPrice
+          updated
+          types
           baseImageLink
           gridImageLinkFallback
           gridImageLink
@@ -175,7 +182,10 @@ query AllMods($lang: LanguageCode, $gameMode: GameMode) {
     basePrice
     avg24hPrice
     lastLowPrice
+    low24hPrice
     lastOfferCount
+    updated
+    types
     buyFor {
       currency
       priceRUB
@@ -457,21 +467,43 @@ function extractSlots(itemData: RawItem): SlotInfo[] {
 /**
  * Flea market realism: neither tarkov.dev API exposes individual active
  * listings, so the best available proxy for the "cheapest current listing" is
- * the item's `lastLowPrice`, and the best availability signal is
- * `lastOfferCount > 0`. GraphQL's flea `buyFor` price is based on 24h averages
- * and is present even with no active listings; the JSON fallback already
- * synthesizes flea offers only when lastOfferCount > 0 at lastLowPrice. This
- * helper applies the same semantics on the GraphQL path: skip flea offers when
- * the item reports no active offers, and price them at lastLowPrice when
- * available instead of the average-based offer price.
- * Returns the price to use, or null when the flea offer should be dropped.
+ * the item's `lastLowPrice`, and the availability signals are `lastOfferCount`
+ * and the `noFlea` type flag. Notes:
+ *  - `noFlea` items are flea-banned in-game yet can report a nonzero
+ *    `lastOfferCount` — the flag takes precedence over the count.
+ *  - Outlier/bait guard: a single bait listing can skew `lastLowPrice`, so the
+ *    effective price is `max(lastLowPrice, low24hPrice)` (a current listing
+ *    below the day's lowest observed price is a fresh deal or bait —
+ *    conservative pricing protects build totals).
+ *  - `unstable` flags prices deviating from `avg24hPrice` by more than 2.5x in
+ *    either direction (informational only — does NOT change the price used).
+ * GraphQL's flea `buyFor` price is based on 24h averages and is present even
+ * with no active listings; the JSON fallback only synthesizes flea offers that
+ * pass these same rules. Fields absent from a response keep previous behavior
+ * (defensive typeof checks throughout).
+ * `price` is null when the item should be treated as flea-unavailable.
  */
-function fleaOfferPrice(item: RawItem, offerPriceRUB: number): number | null {
+function fleaMarketSignals(item: RawItem, offerPriceRUB: number): { price: number | null; unstable: boolean } {
+  const types = item.types;
+  if (Array.isArray(types) && types.includes('noFlea')) return { price: null, unstable: false };
   const offerCount = item.lastOfferCount;
-  if (typeof offerCount === 'number' && offerCount <= 0) return null; // no active listings
-  const low = item.lastLowPrice;
-  if (typeof low === 'number' && low > 0) return low;
-  return offerPriceRUB > 0 ? offerPriceRUB : null;
+  if (typeof offerCount === 'number' && offerCount <= 0) return { price: null, unstable: false }; // no active listings
+  const low = typeof item.lastLowPrice === 'number' && item.lastLowPrice > 0 ? item.lastLowPrice : 0;
+  const low24 = typeof item.low24hPrice === 'number' && item.low24hPrice > 0 ? item.low24hPrice : 0;
+  let price = Math.max(low, low24);
+  if (price <= 0) price = offerPriceRUB > 0 ? offerPriceRUB : 0;
+  const avg = typeof item.avg24hPrice === 'number' && item.avg24hPrice > 0 ? item.avg24hPrice : 0;
+  const unstable = price > 0 && avg > 0 && (price > avg * 2.5 || price < avg / 2.5);
+  return { price: price > 0 ? price : null, unstable };
+}
+
+/** Extra signals threaded onto flea OfferInfo entries for UI badges. */
+function fleaOfferExtras(item: RawItem, unstable: boolean): Partial<OfferInfo> {
+  return {
+    last_offer_count: typeof item.lastOfferCount === 'number' ? item.lastOfferCount : undefined,
+    updated: typeof item.updated === 'string' ? item.updated : undefined,
+    price_unstable: unstable || undefined,
+  };
 }
 
 function extractAllPresets(gun: RawItem, includeUnpurchasable = false): PresetInfo[] {
@@ -502,10 +534,12 @@ function extractAllPresets(gun: RawItem, includeUnpurchasable = false): PresetIn
       if (typeof offer !== 'object' || !offer) continue;
       const source = offer.source ?? '';
       let price = offer.priceRUB ?? 0;
+      let fleaExtras: Partial<OfferInfo> | null = null;
       if (source === 'fleaMarket') {
-        const fleaPrice = fleaOfferPrice(preset, price);
-        if (fleaPrice === null) continue;
-        price = fleaPrice;
+        const flea = fleaMarketSignals(preset, price);
+        if (flea.price === null) continue;
+        price = flea.price;
+        fleaExtras = fleaOfferExtras(preset, flea.unstable);
       }
       if (price <= 0) continue;
       const vendor = offer.vendor ?? {};
@@ -519,6 +553,7 @@ function extractAllPresets(gun: RawItem, includeUnpurchasable = false): PresetIn
         vendor_name: vendor.name ?? '',
         vendor_normalized: vendor.normalizedName ?? '',
         trader_level: traderLevel,
+        ...(fleaExtras ?? {}),
       });
     }
     const bartersFor = preset.bartersFor ?? [];
@@ -687,15 +722,19 @@ function extractModStats(mod: RawItem): ModStats {
   const offers: OfferInfo[] = [];
   let lowestPrice = 0;
   let priceSource = 'market';
+  let fleaUnstable = false;
 
   for (const offer of buyFor) {
     if (typeof offer !== 'object' || !offer) continue;
     const source = offer.source ?? '';
     let price = offer.priceRUB ?? 0;
+    let fleaExtras: Partial<OfferInfo> | null = null;
     if (source === 'fleaMarket') {
-      const fleaPrice = fleaOfferPrice(mod, price);
-      if (fleaPrice === null) continue;
-      price = fleaPrice;
+      const flea = fleaMarketSignals(mod, price);
+      if (flea.price === null) continue;
+      price = flea.price;
+      fleaUnstable = flea.unstable;
+      fleaExtras = fleaOfferExtras(mod, flea.unstable);
     }
     if (price <= 0) continue;
     const vendor = offer.vendor ?? {};
@@ -711,6 +750,7 @@ function extractModStats(mod: RawItem): ModStats {
       vendor_name: vendor.name ?? '',
       vendor_normalized: vendor.normalizedName ?? '',
       trader_level: traderLevel,
+      ...(fleaExtras ?? {}),
     });
   }
   const bartersFor = mod.bartersFor ?? [];
@@ -739,6 +779,7 @@ function extractModStats(mod: RawItem): ModStats {
     offers,
     purchasable,
     reference_price_rub: !purchasable ? referencePriceRub : undefined,
+    price_unstable: fleaUnstable || undefined,
     price: lowestPrice,
     price_source: priceSource,
     weight: mod.weight ?? 0,

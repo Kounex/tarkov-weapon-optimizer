@@ -2,6 +2,15 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.6.2] — 2026-07-28
+
+### Fixed
+- **Flea-banned (`noFlea`) items are no longer treated as flea-available.** 53 mods (REAP-IR thermal, SureFire 60-rounders, …) carry tarkov.dev's `noFlea` flag and report a nonzero `lastOfferCount` despite being unlistable — so offer count alone is not a trustworthy availability signal. Both the GraphQL and JSON API paths now skip flea offers for `noFlea` items explicitly (previously only saved accidentally by their `lastLowPrice` being null). `types` is now fetched/passed through on both paths; `CACHE_VERSION` 16 → 17.
+
+### Added
+- **Bait-listing guard for flea prices.** Effective flea price is now `max(lastLowPrice, low24hPrice)` on both paths: a current listing priced below the day's lowest observed price is treated as a possible bait/outlier and priced conservatively instead of skewing build totals.
+- **Flea price badges in build results.** Item rows (and preset cards) whose price comes from the flea market now show small badges: **scarce** (≤ 3 active offers at last scan), **stale** (price data older than 24 h), and **unstable** (current price deviates > 2.5× from the 24 h average — flag only, never changes the price used). With tooltips, in all 16 locales.
+
 ## [v2.6.1] — 2026-07-28
 
 ### Added

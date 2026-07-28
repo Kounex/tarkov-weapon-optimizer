@@ -20,6 +20,12 @@ export interface OfferInfo {
   trader_level: number | null;
   barter_requirements?: BarterRequirement[];
   requires_dogtag?: boolean;
+  /** Flea offers only: active listing count reported by the API (<=3 → "scarce" badge). */
+  last_offer_count?: number;
+  /** Flea offers only: API `updated` timestamp of the item's price data (>24h old → "stale" badge). */
+  updated?: string;
+  /** Flea offers only: effective flea price deviates from avg24hPrice by >2.5x ("unstable" badge). */
+  price_unstable?: boolean;
 }
 
 // --- Gun Stats ---
@@ -66,6 +72,8 @@ export interface ModStats {
   purchasable: boolean;
   /** BSG base / avg24h when not purchasable — display reference only, not used in spend constraints */
   reference_price_rub?: number;
+  /** Effective flea price deviates from avg24hPrice by >2.5x (informational; price used is unchanged) */
+  price_unstable?: boolean;
   price: number;
   price_source: string;
   weight: number;
