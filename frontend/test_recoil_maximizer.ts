@@ -1,5 +1,6 @@
 import { solve } from './src/solver/solver';
 import { buildCompatibilityMap } from './src/solver/compatibilityMap';
+import { fetchFromJsonApi } from './src/solver/jsonApiAdapter';
 import type { ItemLookup, GunStats, ModStats, SolveParams } from './src/solver/types';
 
 async function runTest() {
@@ -72,13 +73,28 @@ async function runTest() {
         const resJson = await response.json();
         data = resJson.data;
     } catch (e) {
-        console.error('Fetch failed:', e);
-        return;
+        console.warn('GraphQL fetch failed:', e);
+        data = null;
     }
 
     if (!data || !data.items) {
-        console.error('Invalid data received');
-        return;
+        // GraphQL API unavailable (e.g. the 2026-07 outage) — fall back to the
+        // JSON API via the same adapter dataService uses, mapped back into the
+        // raw item shape this test's lookup builder consumes.
+        console.warn('Falling back to JSON API (jsonApiAdapter)...');
+        const { guns, mods } = await fetchFromJsonApi('en', 'regular');
+        data = {
+            items: [
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ...guns.map((g: any) => ({
+                    ...g,
+                    types: ['gun'],
+                    properties: { ...g.properties, ergo: g.properties?.ergonomics },
+                })),
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                ...mods.map((m: any) => ({ ...m, types: ['mods'] })),
+            ],
+        };
     }
 
     const lookup: ItemLookup = {};

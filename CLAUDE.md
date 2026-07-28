@@ -56,7 +56,7 @@ UI Component → api/client.ts → Web Worker (solver.worker.ts) → solver.ts �
 ```
 
 **Solver Pipeline (`frontend/src/solver/`):**
-1. `dataService.ts` — Fetches guns/mods from Tarkov.dev GraphQL API, builds `ItemLookup`, caches in IndexedDB
+1. `dataService.ts` — Fetches guns/mods from Tarkov.dev GraphQL API (falls back to the JSON API via `jsonApiAdapter.ts` on failure), builds `ItemLookup`, caches in IndexedDB
 2. `compatibilityMap.ts` — BFS traversal from weapon to discover all reachable mods and slot relationships
 3. `lpBuilder.ts` — Builds a **CPLEX LP format** string (`buildLP`): binary-style decisions as a continuous LP with constraints matching the CP-SAT model (scaled ergo/recoil/price coefficients; auxiliary objective variable for long lines HiGHS parses poorly)
 4. `solver.ts` — Loads **HiGHS** (`highs` npm package / WASM), runs `highs.solve(lpString)`, reads column primals for `x_*`, `base_*`, `buy_*`, assembles `OptimizeResponse` and final stats
@@ -103,6 +103,17 @@ UI Component → api/client.ts → Web Worker (solver.worker.ts) → solver.ts �
 All weapon/mod data from **Tarkov.dev GraphQL API** (`https://api.tarkov.dev/graphql`).
 - Game modes: `regular`, `pve`
 - Languages: en, ru, zh, es, de, fr, it, ja, ko, pl, pt, tr, cs, hu, ro, sk
+
+**JSON API fallback:** When the GraphQL API fails (network/HTTP error or GraphQL
+`errors` — e.g. the July 2026 GraphQL outage), `dataService.ts` automatically falls
+back to the maintainer-recommended JSON API (`https://json.tarkov.dev`).
+`frontend/src/solver/jsonApiAdapter.ts` fetches `{gameMode}/items` (+ `items_{lang}`
+translation overlays), `traders` (+ overlays), and `barters`, then reshapes them into
+the exact GraphQL-shaped item objects the extract* functions consume, so downstream
+solver code is identical on both paths. GraphQL is limited to 2 quick attempts before
+switching. Flea pricing on both paths uses `lastLowPrice` (best available proxy for
+the cheapest current listing — neither API exposes individual listings) and treats
+items with `lastOfferCount <= 0` as flea-unavailable.
 
 ## CI/CD
 

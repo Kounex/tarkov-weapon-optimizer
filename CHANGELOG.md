@@ -2,6 +2,14 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.6.1] — 2026-07-28
+
+### Added
+- **JSON API fallback for game data** (`jsonApiAdapter.ts`). The tarkov.dev GraphQL API has had extended outages (HTTP 503 on every query since 2026-07-21, upstream issue the-hideout/tarkov-api#474). On any GraphQL failure the app now falls back to the maintainer-recommended JSON API (`json.tarkov.dev`), reshaping its responses (id-keyed item dicts, placeholder names + per-language translation overlays, trader-id offers, flat barter list) into the GraphQL item shape the solver already consumes — no downstream changes. GraphQL stays the primary source; fallback results are cached in IndexedDB like GraphQL results (`CACHE_VERSION` 15 → 16). GraphQL retries reduced from 3 (~14s worst case) to 2 quick attempts so the fallback kicks in fast.
+
+### Fixed
+- **Flea-market prices now track current listings instead of 24h averages.** Neither tarkov.dev API exposes individual active listings, so flea offers are now priced at the item's `lastLowPrice` (current cheapest listing) on both the GraphQL and JSON paths, and items reporting `lastOfferCount <= 0` are treated as flea-unavailable (previously an average-based flea price was used even when nothing was actually listed). Barter required-item unit costs now prefer `lastLowPrice` over `avg24hPrice`. `avg24hPrice` remains only in reference/display roles.
+
 ## [v2.5.5] — 2026-04-20
 
 ### Added

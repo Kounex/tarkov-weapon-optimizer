@@ -1,15 +1,21 @@
 /**
- * Data fetching from tarkov.dev GraphQL API + IndexedDB caching + item lookup building.
+ * Data fetching from tarkov.dev + IndexedDB caching + item lookup building.
  * Ported from backend/app/services/optimizer.py and queries.py.
+ *
+ * Primary source is the GraphQL API; on any GraphQL failure (network error,
+ * HTTP error, or GraphQL `errors` in the response) we fall back to the
+ * maintainer-recommended JSON API via jsonApiAdapter.ts, which reshapes the
+ * JSON responses into the same GraphQL-shaped objects consumed below.
  */
 
 import type {
   ItemLookup, SlotInfo, GunStats, ModStats, OfferInfo, PresetInfo, TraderLevels,
 } from './types.ts';
 import { DEFAULT_TRADER_LEVELS } from './types.ts';
+import { fetchFromJsonApi } from './jsonApiAdapter.ts';
 
 const API_URL = 'https://api.tarkov.dev/graphql';
-const CACHE_VERSION = 15;
+const CACHE_VERSION = 16;
 const CACHE_TTL_MS = 3600 * 1000; // 1 hour
 const DB_NAME = 'tarkov-optimizer-cache';
 const DB_VERSION = 1;
@@ -23,6 +29,8 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
     id
     basePrice
     avg24hPrice
+    lastLowPrice
+    lastOfferCount
     buyFor {
       currency
       priceRUB
@@ -43,7 +51,7 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
       trader { name normalizedName }
       level
       requiredItems {
-        item { id name avg24hPrice basePrice iconLink }
+        item { id name avg24hPrice lastLowPrice basePrice iconLink }
         count
       }
     }
@@ -90,6 +98,8 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
           id
           name
           shortName
+          lastLowPrice
+          lastOfferCount
           baseImageLink
           gridImageLinkFallback
           gridImageLink
@@ -124,7 +134,7 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
             trader { name normalizedName }
             level
             requiredItems {
-              item { id name avg24hPrice basePrice iconLink }
+              item { id name avg24hPrice lastLowPrice basePrice iconLink }
               count
             }
           }
@@ -164,6 +174,8 @@ query AllMods($lang: LanguageCode, $gameMode: GameMode) {
     id
     basePrice
     avg24hPrice
+    lastLowPrice
+    lastOfferCount
     buyFor {
       currency
       priceRUB
@@ -181,7 +193,7 @@ query AllMods($lang: LanguageCode, $gameMode: GameMode) {
       trader { name normalizedName }
       level
       requiredItems {
-        item { id name avg24hPrice basePrice iconLink }
+        item { id name avg24hPrice lastLowPrice basePrice iconLink }
         count
       }
     }
@@ -337,8 +349,10 @@ async function runQuery<T>(query: string, variables: Record<string, string>): Pr
   const cached = await getCached<T>(cacheKey);
   if (cached) return cached;
 
+  // Keep GraphQL attempts short: on failure we fall back to the JSON API
+  // (fetchAllData), so don't burn ~14s on retries before switching.
   let lastError: unknown;
-  for (let attempt = 1; attempt <= 3; attempt++) {
+  for (let attempt = 1; attempt <= 2; attempt++) {
     try {
       const resp = await fetch(API_URL, {
         method: 'POST',
@@ -353,7 +367,7 @@ async function runQuery<T>(query: string, variables: Record<string, string>): Pr
       return data;
     } catch (e) {
       lastError = e;
-      if (attempt < 3) await new Promise(r => setTimeout(r, 2 ** attempt * 1000));
+      if (attempt < 2) await new Promise(r => setTimeout(r, 1500));
     }
   }
   throw lastError;
@@ -366,11 +380,25 @@ interface GunQueryResult { items: RawItem[] }
 interface ModQueryResult { items: RawItem[] }
 
 export async function fetchAllData(lang: string, gameMode: string): Promise<{ guns: RawItem[]; mods: RawItem[] }> {
-  const [gunsData, modsData] = await Promise.all([
-    runQuery<GunQueryResult>(GUNS_QUERY, { lang, gameMode }),
-    runQuery<ModQueryResult>(MODS_QUERY, { lang, gameMode }),
-  ]);
-  return { guns: gunsData.items, mods: modsData.items };
+  try {
+    const [gunsData, modsData] = await Promise.all([
+      runQuery<GunQueryResult>(GUNS_QUERY, { lang, gameMode }),
+      runQuery<ModQueryResult>(MODS_QUERY, { lang, gameMode }),
+    ]);
+    return { guns: gunsData.items, mods: modsData.items };
+  } catch (gqlError) {
+    // GraphQL API down/unreachable (e.g. the 2026-07 tarkov.dev GraphQL outage) —
+    // fall back to the maintainer-recommended JSON API, reshaped into the same
+    // GraphQL item shape by jsonApiAdapter so everything below stays identical.
+    console.warn('[dataService] GraphQL failed, falling back to JSON API:', gqlError);
+    const mode = gameMode || 'regular';
+    const cacheKey = `json-fallback:${lang}:${mode}`;
+    const cached = await getCached<{ guns: RawItem[]; mods: RawItem[] }>(cacheKey);
+    if (cached) return cached;
+    const data = await fetchFromJsonApi(lang, mode);
+    await setCache(cacheKey, data);
+    return data;
+  }
 }
 
 // --- Data Extraction (ported from optimizer.py) ---
@@ -426,6 +454,26 @@ function extractSlots(itemData: RawItem): SlotInfo[] {
   });
 }
 
+/**
+ * Flea market realism: neither tarkov.dev API exposes individual active
+ * listings, so the best available proxy for the "cheapest current listing" is
+ * the item's `lastLowPrice`, and the best availability signal is
+ * `lastOfferCount > 0`. GraphQL's flea `buyFor` price is based on 24h averages
+ * and is present even with no active listings; the JSON fallback already
+ * synthesizes flea offers only when lastOfferCount > 0 at lastLowPrice. This
+ * helper applies the same semantics on the GraphQL path: skip flea offers when
+ * the item reports no active offers, and price them at lastLowPrice when
+ * available instead of the average-based offer price.
+ * Returns the price to use, or null when the flea offer should be dropped.
+ */
+function fleaOfferPrice(item: RawItem, offerPriceRUB: number): number | null {
+  const offerCount = item.lastOfferCount;
+  if (typeof offerCount === 'number' && offerCount <= 0) return null; // no active listings
+  const low = item.lastLowPrice;
+  if (typeof low === 'number' && low > 0) return low;
+  return offerPriceRUB > 0 ? offerPriceRUB : null;
+}
+
 function extractAllPresets(gun: RawItem, includeUnpurchasable = false): PresetInfo[] {
   const props = gun.properties ?? {};
   const presetsData = props.presets ?? [];
@@ -452,9 +500,14 @@ function extractAllPresets(gun: RawItem, includeUnpurchasable = false): PresetIn
     const offers: OfferInfo[] = [];
     for (const offer of buyFor) {
       if (typeof offer !== 'object' || !offer) continue;
-      const price = offer.priceRUB ?? 0;
-      if (price <= 0) continue;
       const source = offer.source ?? '';
+      let price = offer.priceRUB ?? 0;
+      if (source === 'fleaMarket') {
+        const fleaPrice = fleaOfferPrice(preset, price);
+        if (fleaPrice === null) continue;
+        price = fleaPrice;
+      }
+      if (price <= 0) continue;
       const vendor = offer.vendor ?? {};
       let traderLevel: number | null = null;
       if (source !== 'fleaMarket') {
@@ -571,14 +624,19 @@ function extractBarterOffers(bartersFor: unknown[]): OfferInfo[] {
     if (!trader) continue;
     const level = typeof b.level === 'number' ? b.level : 1;
     const requiredItems = (b.requiredItems ?? []) as Array<{
-      item?: { name?: string; avg24hPrice?: number | null; basePrice?: number | null; iconLink?: string };
+      item?: { name?: string; avg24hPrice?: number | null; lastLowPrice?: number | null; basePrice?: number | null; iconLink?: string };
       count?: number;
     }>;
     let totalCost = 0;
     const reqs: import('./types').BarterRequirement[] = [];
     for (const ri of requiredItems) {
       const count = ri.count ?? 1;
-      const price = ri.item?.avg24hPrice ?? ri.item?.basePrice ?? 0;
+      // Unit price for required items: prefer the current lowest flea listing
+      // proxy (lastLowPrice) over the 24h average; basePrice is the last resort.
+      const riItem = ri.item;
+      const price = (typeof riItem?.lastLowPrice === 'number' && riItem.lastLowPrice > 0)
+        ? riItem.lastLowPrice
+        : (riItem?.avg24hPrice ?? riItem?.basePrice ?? 0);
       totalCost += count * price;
       reqs.push({ name: ri.item?.name ?? 'Unknown', count, unit_price: price, icon: ri.item?.iconLink || undefined });
     }
@@ -632,9 +690,14 @@ function extractModStats(mod: RawItem): ModStats {
 
   for (const offer of buyFor) {
     if (typeof offer !== 'object' || !offer) continue;
-    const price = offer.priceRUB ?? 0;
-    if (price <= 0) continue;
     const source = offer.source ?? '';
+    let price = offer.priceRUB ?? 0;
+    if (source === 'fleaMarket') {
+      const fleaPrice = fleaOfferPrice(mod, price);
+      if (fleaPrice === null) continue;
+      price = fleaPrice;
+    }
+    if (price <= 0) continue;
     const vendor = offer.vendor ?? {};
     let traderLevel: number | null = null;
     if (source === 'fleaMarket') {
