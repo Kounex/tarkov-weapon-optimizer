@@ -97,6 +97,7 @@
     "explore_empty": "Za současných omezení žádné body fronty",
     "gunsmith_infeasible": "Úkol gunsmitha nelze splnit",
     "optimize_non_optimal": "Stav řešiče: {{status}}",
+    "preset_base_fallback": "Vybraný základní preset není při aktuálním nastavení obchodníků/blešího trhu dostupný — solver zvolil základ automaticky.",
     "refresh_done": "Mezipaměť vymazána, opětovné načtení...",
     "refresh_failed": "Nepodařilo se vymazat mezipaměť"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Data o ceně jsou starší než 24 h — skutečná cena se může lišit.",
     "flea_badge_unstable": "Nestabilní",
     "flea_badge_unstable_tooltip": "Nejnižší aktuální nabídka se odchyluje od 24h průměru o více než 2,5×.",
+    "preset_base_label": "Základní preset",
+    "preset_base_auto": "Auto (solver vybere nejlepší)",
+    "preset_base_stock": "Sériová (holá)",
+    "preset_base_unavailable": "nedostupný při aktuálním nastavení",
     "lock_action_tooltip_add": "Zamknout (vyžadovat v příštím buildu)",
     "lock_action_tooltip_remove": "Odemknout (odebrat z vyžadovaných)",
     "ban_action_tooltip_add": "Zakázat (vyloučit z příštího buildu)",

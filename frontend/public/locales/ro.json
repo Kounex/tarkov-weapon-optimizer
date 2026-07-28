@@ -97,6 +97,7 @@
     "explore_empty": "Niciun punct frontieră cu restricțiile curente",
     "gunsmith_infeasible": "Sarcina de armurier nu poate fi îndeplinită",
     "optimize_non_optimal": "Stare solver: {{status}}",
+    "preset_base_fallback": "Presetul de bază selectat nu este disponibil la setările curente de comercianți/piața de vechituri — solverul a ales baza automat.",
     "refresh_done": "Cache șters, reîncarcă…",
     "refresh_failed": "Nu se poate șterge cache"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Datele de preț sunt mai vechi de 24h — prețul real poate diferi.",
     "flea_badge_unstable": "Instabil",
     "flea_badge_unstable_tooltip": "Cea mai mică ofertă curentă abate cu peste 2,5× de la media de 24h.",
+    "preset_base_label": "Preset de bază",
+    "preset_base_auto": "Auto (solverul alege optimul)",
+    "preset_base_stock": "Standard (gol)",
+    "preset_base_unavailable": "indisponibil la setările curente",
     "lock_action_tooltip_add": "Blochează (obligatoriu în următorul build)",
     "lock_action_tooltip_remove": "Deblochează (elimină din obligatorii)",
     "ban_action_tooltip_add": "Interzice (exclude din următorul build)",

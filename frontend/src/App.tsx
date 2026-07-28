@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo, useRef, type CSSProperties } from 'react'
 import { useTranslation } from 'react-i18next'
 import { ConfigProvider, Layout, Select, Segmented, Spin, message, App as AntApp, theme, Typography, Tag, Space, Grid, Dropdown, Button, Tooltip } from 'antd'
 import { ThunderboltOutlined, BarChartOutlined, ToolOutlined, MoonOutlined, MenuOutlined, BlockOutlined, GithubOutlined, CloudOutlined, HistoryOutlined, ReloadOutlined, ImportOutlined } from '@ant-design/icons'
-import { getInfo, optimize, explore, getWeaponMods, getGunsmithTasks, computeMOAFloor, clearDataCache } from './api/client'
-import type { Gun, OptimizeResponse, ModInfo, ModCategoryOption, ExplorePoint, GunsmithTask, GameMode, SolverPrecisionMode } from './api/client'
+import { getInfo, optimize, explore, getWeaponMods, getWeaponPresets, getGunsmithTasks, computeMOAFloor, clearDataCache } from './api/client'
+import type { Gun, OptimizeResponse, ModInfo, ModCategoryOption, ExplorePoint, GunsmithTask, GameMode, SolverPrecisionMode, WeaponPresetOption, WeaponBaseOptions } from './api/client'
 import { ResponsiveLayout } from './layouts/ResponsiveLayout'
 import { ChangelogModal } from './components/common/ChangelogModal'
 import { OptimizePanel } from './components/optimize/OptimizePanel'
@@ -208,6 +208,13 @@ function AppContent({
   const [result, setResult] = useState<OptimizeResponse | null>(null)
   const [availableMods, setAvailableMods] = useState<ModInfo[]>([])
   const [loadingMods, setLoadingMods] = useState(false)
+  // Forced-base preset selection (undefined = solver picks the base automatically)
+  const [weaponPresets, setWeaponPresets] = useState<WeaponPresetOption[]>([])
+  const [nakedBase, setNakedBase] = useState<WeaponBaseOptions['naked'] | null>(null)
+  const [selectedPresetId, setSelectedPresetId] = useState<string | undefined>(undefined)
+  const [loadingPresets, setLoadingPresets] = useState(false)
+  const presetRequestSeq = useRef(0)
+  const presetNameLookup = useRef<Record<string, { name: string; image?: string | null }>>({})
   const [selectedCategory, setSelectedCategory] = useState<string>('All')
   const [selectedCaliber, setSelectedCaliber] = useState<string>('All')
   const [ergoWeight, setErgoWeight] = useState(33)
@@ -398,6 +405,44 @@ function AppContent({
       })
   }, [selectedGunId, gameMode, i18n.language])
 
+  // Reset the forced base when the weapon changes (covers all gun-change paths)
+  useEffect(() => {
+    setSelectedPresetId(undefined)
+    // Clear stale base options too — until the fetch below lands, the dropdown
+    // would otherwise still show the previous weapon's presets.
+    setWeaponPresets([])
+    setNakedBase(null)
+  }, [selectedGunId])
+
+  // Fetch the weapon's base options (stock + purchasable presets), re-priced
+  // whenever the trader/flea availability settings change.
+  useEffect(() => {
+    if (!selectedGunId) return
+    const seq = ++presetRequestSeq.current
+    setLoadingPresets(true)
+    getWeaponPresets(selectedGunId, {
+      trader_levels: traderLevels,
+      flea_available: fleaAvailable,
+      barter_available: barterAvailable,
+      barter_exclude_dogtags: barterExcludeDogtags,
+      player_level: playerLevel,
+    }, gameMode, i18n.language || 'en')
+      .then(data => {
+        if (seq !== presetRequestSeq.current) return
+        setWeaponPresets(data.presets)
+        setNakedBase(data.naked)
+        for (const p of data.presets) {
+          presetNameLookup.current[p.id] = { name: p.name, image: p.image }
+        }
+        setLoadingPresets(false)
+      })
+      .catch(err => {
+        console.error('Failed to fetch weapon presets', err)
+        if (seq !== presetRequestSeq.current) return
+        setLoadingPresets(false)
+      })
+  }, [selectedGunId, gameMode, i18n.language, traderLevels, fleaAvailable, barterAvailable, barterExcludeDogtags, playerLevel])
+
   const categories = useMemo(() => {
     const filtered = selectedCaliber === 'All' ? guns : guns.filter(g => g.caliber === selectedCaliber)
     return ['All', ...new Set(filtered.map(g => g.category))].sort()
@@ -524,11 +569,13 @@ function AppContent({
         flea_available: fleaAvailable,
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
+        preset_id: selectedPresetId,
         precise_mode: solverPrecision,
       }, gameMode, i18n.language || 'en')
       setResult(res)
       if (res.status === 'optimal') {
         messageApi.success(t('toast.optimize_success'))
+        if (res.preset_unavailable_fallback) messageApi.warning(t('toast.preset_base_fallback'))
       } else if (res.status === 'infeasible') {
         const base = t('toast.optimize_infeasible')
         messageApi.error(res.reason ? `${base} (${res.reason})` : base)
@@ -565,9 +612,11 @@ function AppContent({
         flea_available: fleaAvailable,
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
+        preset_id: selectedPresetId,
         precise_mode: solverPrecision,
       }, gameMode, i18n.language || 'en')
       setExploreResult(res.points)
+      if (res.preset_unavailable_fallback) messageApi.warning(t('toast.preset_base_fallback'))
       setExploreSolveTime(res.total_solve_time_ms)
       setExplorePrecisionMeta({
         request: res.precision_request,
@@ -772,6 +821,12 @@ function AppContent({
     categories,
     calibers,
     filteredGuns,
+    weaponPresets,
+    nakedBase,
+    selectedPresetId,
+    onPresetChange: setSelectedPresetId,
+    loadingPresets,
+    presetNameLookup: presetNameLookup.current,
     availableMods,
     loadingMods,
     modCategoryOptions,

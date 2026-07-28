@@ -201,5 +201,12 @@ export interface SolveParams {
   barterAvailable?: boolean;
   barterExcludeDogtags?: boolean;
   playerLevel?: number | null;
+  /**
+   * User-forced build base: a preset item ID from weapon.presets, or the
+   * 'naked' sentinel for the stock gun. Omitted = solver picks the optimal
+   * base (default behavior). Unavailable forced bases fall back to auto —
+   * see buildLP for details.
+   */
+  presetId?: string | null;
   preciseMode?: boolean;
 }

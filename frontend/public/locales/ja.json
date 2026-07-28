@@ -97,6 +97,7 @@
     "explore_empty": "現在の制約ではフロンティア点がありません",
     "gunsmith_infeasible": "ガンスミスタスクを満たせません",
     "optimize_non_optimal": "ソルバー状態: {{status}}",
+    "preset_base_fallback": "選択したベースプリセットは現在のトレーダー/フリマ設定では利用できません — ソルバーが自動でベースを選択しました。",
     "refresh_done": "キャッシュをクリア、再読み込み中…",
     "refresh_failed": "キャッシュのクリアに失敗しました"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "価格データが 24 時間以上前のものです — 実際の価格と異なる場合があります。",
     "flea_badge_unstable": "不安定",
     "flea_badge_unstable_tooltip": "現在の最安出品が 24 時間平均から 2.5 倍以上乖離しています。",
+    "preset_base_label": "ベースプリセット",
+    "preset_base_auto": "自動（ソルバーが最適を選択）",
+    "preset_base_stock": "ストック（素の銃）",
+    "preset_base_unavailable": "現在の設定では利用不可",
     "lock_action_tooltip_add": "ロック (次のビルドに必須)",
     "lock_action_tooltip_remove": "ロック解除 (必須から削除)",
     "ban_action_tooltip_add": "禁止 (次のビルドから除外)",

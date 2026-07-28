@@ -97,6 +97,7 @@
     "explore_empty": "Nessun punto di frontiera con i vincoli attuali",
     "gunsmith_infeasible": "Impossibile soddisfare il compito da armaiolo",
     "optimize_non_optimal": "Stato del risolutore: {{status}}",
+    "preset_base_fallback": "Il preset base selezionato non è disponibile con le attuali impostazioni di mercanti/mercato delle pulci — il risolutore ha scelto la base automaticamente.",
     "refresh_done": "Cache cancellata, ricaricamento…",
     "refresh_failed": "Impossibile cancellare la cache"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Dati sui prezzi più vecchi di 24 h — il prezzo reale può differire.",
     "flea_badge_unstable": "Instabile",
     "flea_badge_unstable_tooltip": "L'offerta più bassa attuale devia di oltre 2,5× dalla media delle 24 h.",
+    "preset_base_label": "Preset base",
+    "preset_base_auto": "Auto (scelta del risolutore)",
+    "preset_base_stock": "Di serie (nuda)",
+    "preset_base_unavailable": "non disponibile con le impostazioni attuali",
     "lock_action_tooltip_add": "Blocca (richiedi nella prossima build)",
     "lock_action_tooltip_remove": "Sblocca (rimuovi dai richiesti)",
     "ban_action_tooltip_add": "Vieta (escludi dalla prossima build)",

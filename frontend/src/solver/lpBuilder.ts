@@ -43,6 +43,12 @@ export interface LPResult {
   multiSlotItemIndices: Set<number>;
   /** For each item index, the slot indices it can appear in */
   itemToSlotIndices: Map<number, number[]>;
+  /**
+   * Set when params.presetId forced a base that is not purchasable under the
+   * current trader/flea settings — the LP then ran with normal auto base
+   * selection instead. Carries the ignored presetId ('naked' or a preset ID).
+   */
+  forcedBaseIgnored?: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -112,12 +118,32 @@ export function buildLP(params: SolveParams): LPResult {
   // ========================================================================
   // 1. Build preset maps (mirrors CP-SAT)
   // ========================================================================
+  //
+  // Forced base (params.presetId): the user picked a specific base — a preset
+  // ID or the 'naked' sentinel for the stock gun. When the forced base is
+  // purchasable under the current trader/flea settings, the preset maps below
+  // are restricted to exactly that preset (or emptied for 'naked'), so §4
+  // ends up with a single base option and the base_sum constraint forces it.
+  // Preset-item membership, preset pricing, and the buy logic are untouched —
+  // the LP can still add/replace mods on top, and preset-contained items keep
+  // coming in at the preset price (buy_i = 0).
+  //
+  // Fallback: a forced base that is NOT purchasable at current settings (e.g.
+  // user picked a preset, then raised trader-level restrictions) is IGNORED —
+  // the LP runs with normal auto base selection — and the ignored presetId is
+  // reported via LPResult.forcedBaseIgnored so the UI can warn. This includes
+  // the "no purchasable presets at all" case (the §4 fallback-preset path
+  // then behaves exactly as in auto mode).
 
   const presets: PresetInfo[] = weapon.presets;
-  const presetItemsMap: Record<string, Set<string>> = {};
-  const itemToPresets: Record<string, string[]> = {};
-  const presetPricesMap: Record<string, number> = {};
 
+  // Naked-gun purchasability is needed early for the forced-base decision
+  // (mirrors §4: naked gun is a base option only when directly purchasable).
+  const nakedGunPriceRaw = weaponStats.price ?? 0;
+  const nakedGunPurchasable = nakedGunPriceRaw > 0 && nakedGunPriceRaw < 100_000_000;
+
+  // Availability of every purchasable preset at current settings.
+  const presetAvail: Array<{ preset: PresetInfo; price: number }> = [];
   for (const preset of presets) {
     const [pPrice, , pAvail] = getAvailablePrice(
       preset,
@@ -128,6 +154,29 @@ export function buildLP(params: SolveParams): LPResult {
       params.barterExcludeDogtags ?? false,
     );
     if (pPrice <= 0 && !pAvail) continue; // skip unpurchasable
+    presetAvail.push({ preset, price: pPrice });
+  }
+
+  const forcedBase = params.presetId || undefined;
+  let forcedBaseIgnored: string | undefined;
+  let forcedPresetId: string | undefined; // forced preset that survived availability
+  let forceNaked = false;                 // forced stock gun that survived availability
+  if (forcedBase === 'naked') {
+    if (nakedGunPurchasable) forceNaked = true;
+    else forcedBaseIgnored = forcedBase;
+  } else if (forcedBase) {
+    const hit = presetAvail.find(x => x.preset.id === forcedBase);
+    if (hit) forcedPresetId = hit.preset.id;
+    else forcedBaseIgnored = forcedBase;
+  }
+
+  const presetItemsMap: Record<string, Set<string>> = {};
+  const itemToPresets: Record<string, string[]> = {};
+  const presetPricesMap: Record<string, number> = {};
+
+  for (const { preset, price: pPrice } of presetAvail) {
+    if (forceNaked) continue; // stock gun forced — no preset bases at all
+    if (forcedPresetId && preset.id !== forcedPresetId) continue; // only the forced preset
     const pid = preset.id;
     presetPricesMap[pid] = pPrice;
     const items = new Set(preset.items);
@@ -237,9 +286,8 @@ export function buildLP(params: SolveParams): LPResult {
   const basePrices: number[] = [];
   const baseIsNaked: number[] = [];
 
-  const nakedGunPriceRaw = weaponStats.price ?? 0;
-  const nakedGunPurchasable = nakedGunPriceRaw > 0 && nakedGunPriceRaw < 100_000_000;
-  if (nakedGunPurchasable) {
+  // When a preset is forced, the stock gun is not an alternative base option.
+  if (nakedGunPurchasable && !forcedPresetId) {
     baseIds.push('naked');
     basePrices.push(nakedGunPriceRaw);
     baseIsNaked.push(1);
@@ -1033,6 +1081,7 @@ export function buildLP(params: SolveParams): LPResult {
     indexToItem,
     indexToSlot,
     baseIds,
+    forcedBaseIgnored,
     nItems: n_items,
     nBases: n_bases,
     weaponId,

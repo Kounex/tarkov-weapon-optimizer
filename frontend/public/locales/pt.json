@@ -97,6 +97,7 @@
     "explore_empty": "Sem pontos de fronteira com as restrições atuais",
     "gunsmith_infeasible": "Não é possível cumprir a tarefa de armeiro",
     "optimize_non_optimal": "Estado do solucionador: {{status}}",
+    "preset_base_fallback": "A predefinição base selecionada está indisponível nas configurações atuais de comerciantes/mercado de pulgas — o solucionador escolheu a base automaticamente.",
     "refresh_done": "Cache limpo, recarregando…",
     "refresh_failed": "Falha ao limpar cache"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Dados de preço com mais de 24h — o preço real pode ser diferente.",
     "flea_badge_unstable": "Instável",
     "flea_badge_unstable_tooltip": "O anúncio mais baixo atual desvia mais de 2,5× da média de 24h.",
+    "preset_base_label": "Predefinição base",
+    "preset_base_auto": "Auto (o solucionador escolhe)",
+    "preset_base_stock": "De fábrica (nua)",
+    "preset_base_unavailable": "indisponível nas configurações atuais",
     "lock_action_tooltip_add": "Fixar (exigir na próxima build)",
     "lock_action_tooltip_remove": "Desfixar (remover dos exigidos)",
     "ban_action_tooltip_add": "Banir (excluir da próxima build)",

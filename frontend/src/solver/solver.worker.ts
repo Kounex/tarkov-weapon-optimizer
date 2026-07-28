@@ -2,7 +2,7 @@
  * Web Worker for running HiGHS solver without blocking the UI.
  */
 
-import { ensureDataLoaded } from './dataService.ts';
+import { ensureDataLoaded, getAvailablePrice } from './dataService.ts';
 import { buildCompatibilityMap } from './compatibilityMap.ts';
 import { expandIncludeItemsWithDeps } from './requiredItemDeps.ts';
 import { normalizePrecisionRequest, resolvePreciseFlag } from './precisionMode.ts';
@@ -48,13 +48,20 @@ function getCompatMap(data: LoadedData, weaponId: string): CompatibilityMap {
 }
 
 interface WorkerMessage {
-  type: 'loadData' | 'optimize' | 'explore' | 'getInfo' | 'getWeaponMods' | 'getGunsmithTasks' | 'getStatus' | 'computeMOAFloor';
+  type: 'loadData' | 'optimize' | 'explore' | 'getInfo' | 'getWeaponMods' | 'getWeaponPresets' | 'getGunsmithTasks' | 'getStatus' | 'computeMOAFloor';
   id: number;
   payload: {
     lang?: string;
     gameMode?: string;
     request?: OptimizeRequest | ExploreRequest;
     weaponId?: string;
+    availability?: {
+      trader_levels?: OptimizeRequest['trader_levels'];
+      flea_available?: boolean;
+      barter_available?: boolean;
+      barter_exclude_dogtags?: boolean;
+      player_level?: number;
+    };
   };
 }
 
@@ -128,6 +135,48 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
           break;
         }
 
+        case 'getWeaponPresets': {
+          const weaponId = payload.weaponId!;
+          const data = await getOrLoadData(lang, gameMode);
+          const weapon = data.itemLookup[weaponId];
+          if (!weapon || weapon.type !== 'gun') {
+            self.postMessage({ type: 'result', id, payload: { presets: [], naked: { price: 0, available: false } } });
+            break;
+          }
+          // Price/filter presets at the caller's current trader/flea settings,
+          // mirroring the LP's per-preset getAvailablePrice check.
+          const av = payload.availability ?? {};
+          const presets = weapon.presets
+            .map(p => {
+              const [price, source, avail, label] = getAvailablePrice(
+                p,
+                (av.trader_levels as TraderLevels | undefined) ?? undefined,
+                av.flea_available ?? true,
+                av.player_level ?? null,
+                av.barter_available ?? false,
+                av.barter_exclude_dogtags ?? false,
+              );
+              return { id: p.id, name: p.name, image: p.image, price, source, label, available: avail && price > 0 };
+            })
+            .filter(p => p.available)
+            .map(({ id, name, image, price, source, label }) => ({ id, name, image, price, source, label }));
+          const wStats = weapon.stats;
+          const nakedPurchasable = wStats.price > 0 && wStats.price < 100_000_000;
+          self.postMessage({
+            type: 'result',
+            id,
+            payload: {
+              presets,
+              naked: {
+                price: nakedPurchasable ? wStats.price : 0,
+                source: nakedPurchasable ? wStats.price_source : null,
+                available: nakedPurchasable,
+              },
+            },
+          });
+          break;
+        }
+
         case 'optimize': {
           const req = payload.request as OptimizeRequest;
           const data = await getOrLoadData(lang, gameMode);
@@ -159,6 +208,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             barterAvailable: req.barter_available ?? false,
             barterExcludeDogtags: req.barter_exclude_dogtags ?? false,
             playerLevel: req.player_level,
+            presetId: req.preset_id ?? undefined,
             preciseMode: usePrecise,
           });
 
@@ -199,6 +249,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             barterAvailable: req.barter_available ?? false,
             barterExcludeDogtags: req.barter_exclude_dogtags ?? false,
             playerLevel: req.player_level,
+            presetId: req.preset_id ?? undefined,
             preciseMode: usePrecise,
           });
 
@@ -207,6 +258,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             total_solve_time_ms: Math.round(performance.now() - startTime),
             precision_request: precReq,
             precision_resolved: usePrecise ? 'precise' : 'fast',
+            preset_unavailable_fallback: points.some(p => p.preset_unavailable_fallback) || undefined,
           };
 
           self.postMessage({ type: 'result', id, payload: result });

@@ -3,7 +3,7 @@ import { Card, InputNumber, Select, Segmented, Typography } from 'antd'
 import { WeaponSelector } from '../common/WeaponSelector'
 import { ModFilter } from '../common/ModFilter'
 import { LevelConfig } from '../common/LevelConfig'
-import type { Gun, ModInfo, ModCategoryOption } from '../../api/client'
+import type { Gun, ModInfo, ModCategoryOption, WeaponPresetOption, WeaponBaseOptions } from '../../api/client'
 import type { TraderLevels } from '../../solver/types'
 
 interface ExplorePanelProps {
@@ -17,6 +17,12 @@ interface ExplorePanelProps {
   categories: string[]
   calibers: string[]
   filteredGuns: Gun[]
+  weaponPresets: WeaponPresetOption[]
+  nakedBase: WeaponBaseOptions['naked'] | null
+  selectedPresetId?: string
+  onPresetChange: (id: string | undefined) => void
+  loadingPresets: boolean
+  presetNameLookup: Record<string, { name: string; image?: string | null }>
   exploreTradeoff: 'price' | 'recoil' | 'ergo'
   onExploreTradeoffChange: (v: 'price' | 'recoil' | 'ergo') => void
   useExploreBudget: boolean
@@ -65,6 +71,12 @@ export function ExplorePanel(props: ExplorePanelProps) {
         categories={props.categories}
         calibers={props.calibers}
         filteredGuns={props.filteredGuns}
+        presets={props.weaponPresets}
+        nakedBase={props.nakedBase}
+        selectedPresetId={props.selectedPresetId}
+        onPresetChange={props.onPresetChange}
+        loadingPresets={props.loadingPresets}
+        presetNameLookup={props.presetNameLookup}
       />
       <Card size="small" title={<span style={{ userSelect: 'none' }}>{t('explore.tradeoff_strategy')}</span>}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

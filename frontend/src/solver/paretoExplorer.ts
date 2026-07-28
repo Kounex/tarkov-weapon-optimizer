@@ -31,6 +31,8 @@ export interface ParetoParams {
   barterAvailable?: boolean;
   barterExcludeDogtags?: boolean;
   playerLevel?: number | null;
+  /** Forced build base — see SolveParams.presetId. Applied to every frontier point. */
+  presetId?: string | null;
   preciseMode?: boolean;
 }
 
@@ -53,6 +55,7 @@ function buildBaseParams(p: ParetoParams): Omit<SolveParams, 'ergoWeight' | 'rec
     barterAvailable: p.barterAvailable ?? false,
     barterExcludeDogtags: p.barterExcludeDogtags ?? false,
     playerLevel: p.playerLevel,
+    presetId: p.presetId,
     preciseMode: p.preciseMode,
   };
 }
@@ -103,6 +106,7 @@ export async function explorePareto(params: ParetoParams): Promise<ExplorePoint[
       slot_pairs: result.slot_pairs,
       status: result.status,
       solve_time_ms: result.solve_time_ms,
+      preset_unavailable_fallback: result.preset_unavailable_fallback,
     });
   }
 

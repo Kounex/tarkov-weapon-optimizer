@@ -97,6 +97,7 @@
     "explore_empty": "Pri týchto obmedzeniach žiadne body fronty",
     "gunsmith_infeasible": "Úlohu gunsmithella nie je možné splniť",
     "optimize_non_optimal": "Stav riešiča: {{status}}",
+    "preset_base_fallback": "Vybraný základný preset nie je pri aktuálnom nastavení obchodníkov/blšieho trhu dostupný — solver zvolil základ automaticky.",
     "refresh_done": "Vymazaná cache, opätovné načítanie…",
     "refresh_failed": "Nepodarilo sa vymazať cache"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Údaje o cene sú staršie ako 24 h — skutočná cena sa môže líšiť.",
     "flea_badge_unstable": "Nestabilné",
     "flea_badge_unstable_tooltip": "Najnižšia aktuálna ponuka sa odchyluje od 24h priemeru o viac ako 2,5×.",
+    "preset_base_label": "Základný preset",
+    "preset_base_auto": "Auto (solver vyberie najlepší)",
+    "preset_base_stock": "Sériová (holá)",
+    "preset_base_unavailable": "nedostupný pri aktuálnom nastavení",
     "lock_action_tooltip_add": "Zamknúť (vyžadovať v ďalšom builde)",
     "lock_action_tooltip_remove": "Odomknúť (odstrániť z vyžadovaných)",
     "ban_action_tooltip_add": "Zakázať (vylúčiť z ďalšieho buildu)",

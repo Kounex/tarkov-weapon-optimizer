@@ -352,6 +352,7 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
       final_stats: finalStats,
       solve_time_ms: performance.now() - startTime,
       slot_pairs: slotPairs,
+      preset_unavailable_fallback: lp.forcedBaseIgnored ? true : undefined,
     };
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message

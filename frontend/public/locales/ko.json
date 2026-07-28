@@ -97,6 +97,7 @@
     "explore_empty": "현재 제약으로는 프론티어 점이 없습니다",
     "gunsmith_infeasible": "건스미스 과제를 만족할 수 없습니다",
     "optimize_non_optimal": "솔버 상태: {{status}}",
+    "preset_base_fallback": "선택한 기본 프리셋을 현재 상인/플리마켓 설정에서 사용할 수 없습니다 — 솔버가 자동으로 베이스를 선택했습니다.",
     "refresh_done": "캐시 삭제 완료, 다시 로드 중…",
     "refresh_failed": "캐시를 삭제할 수 없습니다"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "가격 데이터가 24시간 이상 지났습니다 — 실제 가격과 다를 수 있습니다.",
     "flea_badge_unstable": "불안정",
     "flea_badge_unstable_tooltip": "현재 최저가 매물이 24시간 평균가와 2.5배 이상 차이 납니다.",
+    "preset_base_label": "기본 프리셋",
+    "preset_base_auto": "자동 (솔버가 최적 선택)",
+    "preset_base_stock": "순정 (민둥 총)",
+    "preset_base_unavailable": "현재 설정에서 사용 불가",
     "lock_action_tooltip_add": "잠금 (다음 빌드에 필수)",
     "lock_action_tooltip_remove": "잠금 해제 (필수에서 제거)",
     "ban_action_tooltip_add": "금지 (다음 빌드에서 제외)",

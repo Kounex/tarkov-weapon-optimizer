@@ -1,7 +1,10 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, Select, Space, Row, Col } from 'antd'
-import type { Gun } from '../../api/client'
+import { Card, Select, Space, Row, Col, Typography } from 'antd'
+import type { Gun, WeaponPresetOption } from '../../api/client'
+import { TraderIcon } from '../ItemRow'
+
+const { Text } = Typography
 
 interface WeaponSelectorProps {
   guns: Gun[]
@@ -14,6 +17,14 @@ interface WeaponSelectorProps {
   categories: string[]
   calibers: string[]
   filteredGuns: Gun[]
+  // Optional forced-base preset selector (rendered only when onPresetChange is provided)
+  presets?: WeaponPresetOption[]
+  nakedBase?: { price: number; source?: string | null; available: boolean } | null
+  selectedPresetId?: string
+  onPresetChange?: (id: string | undefined) => void
+  loadingPresets?: boolean
+  /** id → name/image of every preset seen for this weapon (labels for options that became unavailable at current settings) */
+  presetNameLookup?: Record<string, { name: string; image?: string | null }>
 }
 
 export function WeaponSelector({
@@ -26,10 +37,42 @@ export function WeaponSelector({
   categories,
   calibers,
   filteredGuns,
+  presets,
+  nakedBase,
+  selectedPresetId,
+  onPresetChange,
+  loadingPresets,
+  presetNameLookup,
 }: WeaponSelectorProps) {
   const { t } = useTranslation()
   const [searchValue, setSearchValue] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  // The selected preset may be unavailable at the current trader/flea settings
+  // (e.g. user tightened trader levels after picking it) — keep it visible in
+  // the dropdown, marked, so the solver's auto-fallback warning makes sense.
+  const selectedUnavailable =
+    selectedPresetId && selectedPresetId !== 'naked' && !(presets ?? []).some(p => p.id === selectedPresetId)
+      ? presetNameLookup?.[selectedPresetId]
+      : undefined
+
+  const presetOptions = [
+    { value: 'auto', label: t('ui.preset_base_auto') },
+    {
+      value: 'naked',
+      label: nakedBase?.available
+        ? `${t('ui.preset_base_stock')} — ₽${nakedBase.price.toLocaleString()}`
+        : t('ui.preset_base_stock'),
+    },
+    ...(presets ?? []).map(p => ({
+      value: p.id,
+      label: `${p.name} — ₽${p.price.toLocaleString()}`,
+    })),
+    ...(selectedPresetId && selectedUnavailable
+      ? [{ value: selectedPresetId, label: `${selectedUnavailable.name} (${t('ui.preset_base_unavailable')})` }]
+      : []),
+  ]
+
   return (
     <Card title={<span style={{ userSelect: 'none' }}>{t('sidebar.select_weapon')}</span>} size="small">
       <Space direction="vertical" style={{ width: '100%' }}>
@@ -81,6 +124,46 @@ export function WeaponSelector({
             )
           }}
         />
+        {onPresetChange && selectedGunId && (
+          <div>
+            <Text type="secondary" style={{ fontSize: 12, display: 'block', marginBottom: 4 }}>{t('ui.preset_base_label')}</Text>
+            <Select
+              showSearch
+              style={{ width: '100%' }}
+              popupMatchSelectWidth={false}
+              loading={loadingPresets}
+              value={selectedPresetId ?? 'auto'}
+              onChange={(v) => onPresetChange(v === 'auto' ? undefined : v)}
+              filterOption={(input, option) => (option?.label ?? '').toLowerCase().includes(input.toLowerCase())}
+              options={presetOptions}
+              optionRender={(option) => {
+                if (option.value === 'auto' || option.value === 'naked') {
+                  const showNakedPrice = option.value === 'naked' && nakedBase?.available
+                  return (
+                    <Space>
+                      <span>{option.value === 'naked' ? t('ui.preset_base_stock') : option.label}</span>
+                      {option.value === 'naked' && <TraderIcon source={nakedBase?.source ?? undefined} unknownLabel={t('ui.unknown')} compact />}
+                      {showNakedPrice && <Text type="secondary" style={{ fontSize: 12 }}>₽{nakedBase!.price.toLocaleString()}</Text>}
+                    </Space>
+                  )
+                }
+                const preset = (presets ?? []).find(p => p.id === option.value)
+                if (!preset) {
+                  // Selected but unavailable at current settings
+                  return <Text type="warning">{option.label}</Text>
+                }
+                return (
+                  <Space>
+                    {preset.image && <img src={preset.image} alt="" style={{ width: 64, height: 32, objectFit: 'contain' }} />}
+                    <span>{preset.name}</span>
+                    <TraderIcon source={preset.source ?? undefined} unknownLabel={t('ui.unknown')} compact />
+                    <Text type="secondary" style={{ fontSize: 12 }}>₽{preset.price.toLocaleString()}</Text>
+                  </Space>
+                )
+              }}
+            />
+          </div>
+        )}
       </Space>
     </Card>
   )

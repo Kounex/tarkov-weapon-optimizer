@@ -2,6 +2,14 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.6.3] — 2026-07-28
+
+### Added
+- **Base preset selector.** Once a weapon is selected, a "Base preset" dropdown lists every purchasable preset for it (image, name, live price, and source — trader/barter/flea at the current availability settings) plus **Stock (naked)** and the default **Auto** (solver picks the optimal base, unchanged behavior). Picking a preset forces the solver to build on top of exactly that base; the constraint applies to both Optimize and Explore modes. If the forced base isn't purchasable at the current trader/flea/barter settings, the solver falls back to auto and a warning toast explains why. i18n in all 16 locales.
+
+### Fixed
+- Weapon change now also clears the previously fetched preset list — the dropdown briefly showed the *previous* weapon's presets until the new fetch landed.
+
 ## [v2.6.2] — 2026-07-28
 
 ### Fixed

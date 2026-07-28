@@ -97,6 +97,7 @@
     "explore_empty": "Sin puntos de frontera con las restricciones actuales",
     "gunsmith_infeasible": "No se cumple la tarea de armero",
     "optimize_non_optimal": "Estado del solucionador: {{status}}",
+    "preset_base_fallback": "El preset base seleccionado no está disponible con la configuración actual de comerciantes/mercado de pulgas — el solucionador eligió la base automáticamente.",
     "refresh_done": "Caché limpiado, recargando…",
     "refresh_failed": "No se pudo limpiar la caché"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Datos de precio de hace más de 24 h — el precio real puede variar.",
     "flea_badge_unstable": "Inestable",
     "flea_badge_unstable_tooltip": "La oferta más baja actual se desvía más de 2,5× de la media de 24 h.",
+    "preset_base_label": "Preset base",
+    "preset_base_auto": "Auto (el solucionador elige)",
+    "preset_base_stock": "De serie (desnuda)",
+    "preset_base_unavailable": "no disponible con la configuración actual",
     "lock_action_tooltip_add": "Bloquear (requerir en la próxima build)",
     "lock_action_tooltip_remove": "Desbloquear (quitar de requeridos)",
     "ban_action_tooltip_add": "Prohibir (excluir de la próxima build)",

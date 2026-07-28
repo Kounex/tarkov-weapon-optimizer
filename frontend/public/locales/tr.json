@@ -97,6 +97,7 @@
     "explore_empty": "Mevcut kısıtlarla sınır noktası yok",
     "gunsmith_infeasible": "Silah ustası görevi karşılanamıyor",
     "optimize_non_optimal": "Çözücü durumu: {{status}}",
+    "preset_base_fallback": "Seçilen temel hazır ayar mevcut tüccar/bit pazarı ayarlarında kullanılamıyor — çözücü tabanı otomatik seçti.",
     "refresh_done": "Önbellek temizlendi, yeniden yüklüyor…",
     "refresh_failed": "Önbellek temizlenemedi"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Fiyat verileri 24 saatten eski — gerçek fiyat farklı olabilir.",
     "flea_badge_unstable": "Değişken",
     "flea_badge_unstable_tooltip": "Güncel en düşük ilan, 24 saatlik ortalamadan 2,5 kattan fazla sapıyor.",
+    "preset_base_label": "Temel hazır ayar",
+    "preset_base_auto": "Otomatik (çözücü en iyisini seçer)",
+    "preset_base_stock": "Stok (çıplak)",
+    "preset_base_unavailable": "mevcut ayarlarda kullanılamaz",
     "lock_action_tooltip_add": "Kilitle (sonraki yapıda zorunlu)",
     "lock_action_tooltip_remove": "Kilidi aç (zorunlulardan çıkar)",
     "ban_action_tooltip_add": "Yasakla (sonraki yapıdan hariç tut)",

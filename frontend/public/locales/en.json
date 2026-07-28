@@ -98,7 +98,8 @@
     "optimize_infeasible": "No valid build for current constraints",
     "explore_empty": "No frontier points under current constraints",
     "gunsmith_infeasible": "No build satisfies this gunsmith task",
-    "optimize_non_optimal": "Solver status: {{status}}"
+    "optimize_non_optimal": "Solver status: {{status}}",
+    "preset_base_fallback": "Selected base preset is unavailable at current trader/flea settings — the solver picked the base automatically."
   },
   "ui": {
     "initializing": "Initializing...",
@@ -177,6 +178,10 @@
     "flea_badge_stale_tooltip": "Price data is older than 24h — the live price may differ.",
     "flea_badge_unstable": "Unstable",
     "flea_badge_unstable_tooltip": "Lowest current listing deviates from the 24h average by more than 2.5×.",
+    "preset_base_label": "Base preset",
+    "preset_base_auto": "Auto (solver picks best)",
+    "preset_base_stock": "Stock (naked)",
+    "preset_base_unavailable": "unavailable at current settings",
     "lock_action_tooltip_add": "Lock (require in next build)",
     "lock_action_tooltip_remove": "Unlock (remove from required)",
     "ban_action_tooltip_add": "Ban (exclude from next build)",

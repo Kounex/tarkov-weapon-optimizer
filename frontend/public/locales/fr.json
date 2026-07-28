@@ -97,6 +97,7 @@
     "explore_empty": "Aucun point de frontière avec ces contraintes",
     "gunsmith_infeasible": "Impossible de satisfaire cette tâche d’armurier",
     "optimize_non_optimal": "État du solveur : {{status}}",
+    "preset_base_fallback": "Le préréglage de base choisi est indisponible aux réglages marchands/marché aux puces actuels — le solveur a choisi la base automatiquement.",
     "refresh_done": "Cache vidé, rechargement…",
     "refresh_failed": "Impossible de vider le cache"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Données de prix de plus de 24 h — le prix réel peut différer.",
     "flea_badge_unstable": "Instable",
     "flea_badge_unstable_tooltip": "L'offre la plus basse actuelle s'écarte de plus de 2,5× de la moyenne 24 h.",
+    "preset_base_label": "Préréglage de base",
+    "preset_base_auto": "Auto (le solveur choisit)",
+    "preset_base_stock": "D'origine (nu)",
+    "preset_base_unavailable": "indisponible aux réglages actuels",
     "lock_action_tooltip_add": "Verrouiller (requis dans le prochain build)",
     "lock_action_tooltip_remove": "Déverrouiller (retirer des requis)",
     "ban_action_tooltip_add": "Bannir (exclure du prochain build)",

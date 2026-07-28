@@ -97,6 +97,7 @@
     "explore_empty": "Brak punktów granicy przy tych ograniczeniach",
     "gunsmith_infeasible": "Nie można spełnić zadania rusznikarza",
     "optimize_non_optimal": "Status solvera: {{status}}",
+    "preset_base_fallback": "Wybrany preset bazowy jest niedostępny przy bieżących ustawieniach handlarzy/targowiska — solver wybrał bazę automatycznie.",
     "refresh_done": "Pamięć podręczna wyczyszczona, ponowne ładowanie…",
     "refresh_failed": "Nie udało się wyczyścić pamięci podręcznej"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Dane o cenie starsze niż 24 h — rzeczywista cena może się różnić.",
     "flea_badge_unstable": "Niestabilna",
     "flea_badge_unstable_tooltip": "Najniższa bieżąca oferta odbiega od średniej 24 h o ponad 2,5×.",
+    "preset_base_label": "Preset bazowy",
+    "preset_base_auto": "Auto (solver wybiera najlepszy)",
+    "preset_base_stock": "Fabryczna (goła)",
+    "preset_base_unavailable": "niedostępny przy bieżących ustawieniach",
     "lock_action_tooltip_add": "Zablokuj (wymagaj w następnej budowie)",
     "lock_action_tooltip_remove": "Odblokuj (usuń z wymaganych)",
     "ban_action_tooltip_add": "Zabroń (wyklucz z następnej budowy)",

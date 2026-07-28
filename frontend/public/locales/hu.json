@@ -97,6 +97,7 @@
     "explore_empty": "Nincs frontpont ezekkel a korlátokkal",
     "gunsmith_infeasible": "A fegyverkovács feladat nem teljesíthető",
     "optimize_non_optimal": "Megoldó állapota: {{status}}",
+    "preset_base_fallback": "A kiválasztott alap preset nem érhető el a jelenlegi kereskedő/bolhapiac beállításokkal — a solver automatikusan választotta az alapot.",
     "refresh_done": "Gyorsítótár törölve, újratöltés…",
     "refresh_failed": "Nem sikerült törölni a gyorsítótárat"
   },
@@ -171,6 +172,10 @@
     "flea_badge_stale_tooltip": "Az áradatok 24 óránál régebbiek — a tényleges ár eltérhet.",
     "flea_badge_unstable": "Instabil",
     "flea_badge_unstable_tooltip": "A jelenlegi legalacsonyabb hirdetés több mint 2,5×-szorosan eltér a 24 órás átlagtól.",
+    "preset_base_label": "Alap preset",
+    "preset_base_auto": "Auto (a solver választ)",
+    "preset_base_stock": "Gyári (meztelen)",
+    "preset_base_unavailable": "nem érhető el a jelenlegi beállításokkal",
     "lock_action_tooltip_add": "Zárolás (kötelező a következő buildben)",
     "lock_action_tooltip_remove": "Feloldás (eltávolítás a kötelezők közül)",
     "ban_action_tooltip_add": "Tiltás (kizárás a következő buildből)",

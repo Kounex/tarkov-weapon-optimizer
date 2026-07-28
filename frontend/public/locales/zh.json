@@ -97,6 +97,7 @@
     "explore_empty": "这些条件下求不到最优解，可放宽限制再试",
     "gunsmith_infeasible": "按当前商人 / 跳蚤条件无法求解这个枪匠任务",
     "optimize_non_optimal": "求解器返回状态：{{status}}",
+    "preset_base_fallback": "所选基础预设在当前商人/跳蚤设置下不可用 — 优化器已自动选择基础。",
     "refresh_done": "缓存已清空，重新加载中…",
     "refresh_failed": "清空缓存失败"
   },
@@ -175,6 +176,10 @@
     "flea_badge_stale_tooltip": "价格数据已超过 24 小时未更新 — 实际价格可能有变。",
     "flea_badge_unstable": "波动",
     "flea_badge_unstable_tooltip": "当前最低售价与 24 小时均价偏差超过 2.5 倍。",
+    "preset_base_label": "基础预设",
+    "preset_base_auto": "自动（优化器自选最优）",
+    "preset_base_stock": "原厂（裸枪）",
+    "preset_base_unavailable": "当前设置下不可用",
     "lock_action_tooltip_add": "锁定 (必须包含)",
     "lock_action_tooltip_remove": "取消锁定 (不再强制)",
     "ban_action_tooltip_add": "禁用 (排除在外)",

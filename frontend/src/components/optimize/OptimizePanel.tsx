@@ -2,7 +2,7 @@ import { WeaponSelector } from '../common/WeaponSelector'
 import { WeightAdjuster } from '../common/WeightAdjuster'
 import { ModFilter } from '../common/ModFilter'
 import { LevelConfig } from '../common/LevelConfig'
-import type { Gun, ModInfo, ModCategoryOption } from '../../api/client'
+import type { Gun, ModInfo, ModCategoryOption, WeaponPresetOption, WeaponBaseOptions } from '../../api/client'
 import type { TraderLevels } from '../../solver/types'
 
 interface OptimizePanelProps {
@@ -16,6 +16,12 @@ interface OptimizePanelProps {
   categories: string[]
   calibers: string[]
   filteredGuns: Gun[]
+  weaponPresets: WeaponPresetOption[]
+  nakedBase: WeaponBaseOptions['naked'] | null
+  selectedPresetId?: string
+  onPresetChange: (id: string | undefined) => void
+  loadingPresets: boolean
+  presetNameLookup: Record<string, { name: string; image?: string | null }>
   ergoWeight: number
   recoilWeight: number
   priceWeight: number
@@ -80,6 +86,12 @@ export function OptimizePanel(props: OptimizePanelProps) {
         categories={props.categories}
         calibers={props.calibers}
         filteredGuns={props.filteredGuns}
+        presets={props.weaponPresets}
+        nakedBase={props.nakedBase}
+        selectedPresetId={props.selectedPresetId}
+        onPresetChange={props.onPresetChange}
+        loadingPresets={props.loadingPresets}
+        presetNameLookup={props.presetNameLookup}
       />
       <WeightAdjuster
         ergoWeight={props.ergoWeight}

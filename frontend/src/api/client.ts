@@ -51,6 +51,13 @@ export interface OptimizeRequest {
   player_level?: number;
   /** Boolean values are normalized: true → precise, false → fast. */
   precise_mode?: boolean | SolverPrecisionMode;
+  /**
+   * Force the build base: a preset item ID from the weapon's presets, or
+   * 'naked' for the stock gun. Omitted = solver picks the optimal base.
+   * If the forced base is unavailable at the given trader/flea settings, the
+   * solver falls back to auto and flags it via `preset_unavailable_fallback`.
+   */
+  preset_id?: string;
 }
 
 export interface ItemDetail {
@@ -133,6 +140,8 @@ export interface OptimizeResponse {
   precision_resolved?: 'fast' | 'precise';
   /** Slot-item pairs [slotId, itemId][] for EFTForge build export */
   slot_pairs?: [string, string][];
+  /** True when a forced preset_id base was unavailable at current settings and the solver picked the base automatically. */
+  preset_unavailable_fallback?: boolean;
 }
 
 export type GameMode = 'regular' | 'pve';
@@ -179,6 +188,8 @@ export interface ExplorePoint {
   slot_pairs?: [string, string][];
   status: string;
   solve_time_ms?: number;
+  /** See OptimizeResponse.preset_unavailable_fallback */
+  preset_unavailable_fallback?: boolean;
 }
 
 export interface ExploreResponse {
@@ -186,6 +197,8 @@ export interface ExploreResponse {
   total_solve_time_ms?: number;
   precision_request?: SolverPrecisionMode;
   precision_resolved?: 'fast' | 'precise';
+  /** True when any point fell back from a forced preset_id to auto base selection. */
+  preset_unavailable_fallback?: boolean;
 }
 
 export interface GunsmithConstraints {
@@ -288,6 +301,42 @@ export const getInfo = async (gameMode: GameMode = 'regular', lang: string = 'en
 
 export const getWeaponMods = async (weaponId: string, gameMode: GameMode = 'regular', lang: string = 'en'): Promise<{ mods: ModInfo[] }> => {
   return sendWorkerMessage<{ mods: ModInfo[] }>('getWeaponMods', { weaponId, lang, gameMode });
+};
+
+/** A purchasable preset of a weapon, priced at the caller's trader/flea settings. */
+export interface WeaponPresetOption {
+  id: string;
+  name: string;
+  image?: string | null;
+  /** Cheapest price in RUB at the given settings. */
+  price: number;
+  /** API source key of the cheapest offer (trader normalizedName, 'fleaMarket', 'barter:*'). */
+  source?: string | null;
+  /** Human-readable seller label (e.g. "Prapor", "Flea Market"). */
+  label?: string | null;
+}
+
+export interface WeaponBaseOptions {
+  presets: WeaponPresetOption[];
+  /** Stock/naked gun base option (always present; `available` mirrors the LP's naked-base rule). */
+  naked: { price: number; source?: string | null; available: boolean };
+}
+
+export interface BaseAvailabilitySettings {
+  trader_levels?: OptimizeRequest['trader_levels'];
+  flea_available?: boolean;
+  barter_available?: boolean;
+  barter_exclude_dogtags?: boolean;
+  player_level?: number;
+}
+
+export const getWeaponPresets = async (
+  weaponId: string,
+  availability: BaseAvailabilitySettings = {},
+  gameMode: GameMode = 'regular',
+  lang: string = 'en',
+): Promise<WeaponBaseOptions> => {
+  return sendWorkerMessage<WeaponBaseOptions>('getWeaponPresets', { weaponId, availability, lang, gameMode });
 };
 
 export const optimize = async (request: OptimizeRequest, gameMode: GameMode = 'regular', lang: string = 'en'): Promise<OptimizeResponse> => {
