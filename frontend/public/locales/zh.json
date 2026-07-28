@@ -13,6 +13,8 @@
     "flea_market_access": "跳蚤市场",
     "barter_available": "以物换物",
     "barter_exclude_dogtags": "排除狗牌交易",
+    "exclude_scarce": "排除稀缺报价",
+    "exclude_scarce_tooltip": "优化时跳过仅剩 3 个或更少在售商品的跳蚤市场报价",
     "include_exclude": "配件过滤",
     "require_categories": "搜索配件类型…",
     "require_items": "搜索具体配件…",

@@ -60,6 +60,7 @@ interface WorkerMessage {
       flea_available?: boolean;
       barter_available?: boolean;
       barter_exclude_dogtags?: boolean;
+      exclude_scarce?: boolean;
       player_level?: number;
     };
   };
@@ -155,6 +156,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
                 av.player_level ?? null,
                 av.barter_available ?? false,
                 av.barter_exclude_dogtags ?? false,
+                av.exclude_scarce ?? false,
               );
               return { id: p.id, name: p.name, image: p.image, price, source, label, available: avail && price > 0 };
             })
@@ -207,6 +209,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             fleaAvailable: req.flea_available ?? true,
             barterAvailable: req.barter_available ?? false,
             barterExcludeDogtags: req.barter_exclude_dogtags ?? false,
+            excludeScarce: req.exclude_scarce ?? false,
             playerLevel: req.player_level,
             presetId: req.preset_id ?? undefined,
             preciseMode: usePrecise,
@@ -248,6 +251,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             fleaAvailable: req.flea_available ?? true,
             barterAvailable: req.barter_available ?? false,
             barterExcludeDogtags: req.barter_exclude_dogtags ?? false,
+            excludeScarce: req.exclude_scarce ?? false,
             playerLevel: req.player_level,
             presetId: req.preset_id ?? undefined,
             preciseMode: usePrecise,

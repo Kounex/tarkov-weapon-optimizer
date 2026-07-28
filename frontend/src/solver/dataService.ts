@@ -839,6 +839,7 @@ export function getAvailablePrice(
   playerLevel: number | null = null,
   barterAvailable = false,
   barterExcludeDogtags = false,
+  excludeScarce = false,
 ): [number, string | null, boolean, string | null] {
   if (stats.purchasable === false) {
     return [0, 'not_purchasable', false, null];
@@ -874,6 +875,10 @@ export function getAvailablePrice(
     if (source === 'fleaMarket') {
       if (!fleaAvailable) continue;
       if (playerLevel !== null && minLevelFlea > playerLevel) continue;
+      // Scarce-listing filter: same <=3 threshold as the UI "scarce" badge.
+      // Only the flea offer is skipped — trader/barter offers are untouched,
+      // and offers without last_offer_count (old cache data) stay eligible.
+      if (excludeScarce && typeof offer.last_offer_count === 'number' && offer.last_offer_count <= 3) continue;
     } else {
       const traderLevel = traderLevels[vendor] ?? 4;
       if (requiredLevel !== null && requiredLevel > traderLevel) continue;

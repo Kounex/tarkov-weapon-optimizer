@@ -13,6 +13,8 @@
     "flea_market_access": "Flea Market",
     "barter_available": "Barter Trades",
     "barter_exclude_dogtags": "Exclude dogtag barters",
+    "exclude_scarce": "Exclude scarce offers",
+    "exclude_scarce_tooltip": "Skip flea-market offers with 3 or fewer active listings when optimizing",
     "include_exclude": "Mod Filter",
     "require_categories": "Search categories...",
     "require_items": "Search mods...",

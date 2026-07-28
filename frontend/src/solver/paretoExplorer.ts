@@ -30,6 +30,8 @@ export interface ParetoParams {
   fleaAvailable?: boolean;
   barterAvailable?: boolean;
   barterExcludeDogtags?: boolean;
+  /** See SolveParams.excludeScarce. Applied to every frontier point. */
+  excludeScarce?: boolean;
   playerLevel?: number | null;
   /** Forced build base — see SolveParams.presetId. Applied to every frontier point. */
   presetId?: string | null;
@@ -54,6 +56,7 @@ function buildBaseParams(p: ParetoParams): Omit<SolveParams, 'ergoWeight' | 'rec
     fleaAvailable: p.fleaAvailable ?? true,
     barterAvailable: p.barterAvailable ?? false,
     barterExcludeDogtags: p.barterExcludeDogtags ?? false,
+    excludeScarce: p.excludeScarce ?? false,
     playerLevel: p.playerLevel,
     presetId: p.presetId,
     preciseMode: p.preciseMode,

@@ -2,6 +2,11 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.6.4] — 2026-07-28
+
+### Added
+- **"Exclude scarce offers" switch** in the Market & Trader Access box (shown when flea access is on, persisted with the other market settings). When enabled, the optimizer skips flea offers with ≤ 3 active listings — the same threshold as the "scarce" badge introduced in v2.6.2. Scarcity is evaluated per offer, not per item: a part still buyable from a trader (within trader-level settings) or via an enabled barter stays available; only parts whose *sole* source is a scarce flea listing drop out of builds entirely. Applies to Optimize, Explore, Gunsmith, and the base-preset listing. i18n in all 16 locales.
+
 ## [v2.6.3] — 2026-07-28
 
 ### Added

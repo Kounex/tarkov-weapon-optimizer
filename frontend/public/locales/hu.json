@@ -13,6 +13,8 @@
     "flea_market_access": "Bolhapiac",
     "barter_available": "Cserekereskedés",
     "barter_exclude_dogtags": "Dögcédulás cserék kizárása",
+    "exclude_scarce": "Szűkös ajánlatok kizárása",
+    "exclude_scarce_tooltip": "3 vagy kevesebb aktív hirdetéssel rendelkező bolhapiaci ajánlatok kihagyása optimalizáláskor",
     "include_exclude": "Mod szűrő",
     "require_categories": "Kategóriák keresése...",
     "require_items": "Modok keresése...",

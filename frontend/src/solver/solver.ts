@@ -179,6 +179,7 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
     const playerLevel = params.playerLevel ?? null;
     const barterAvailable = params.barterAvailable ?? false;
     const barterExcludeDogtags = params.barterExcludeDogtags ?? false;
+    const excludeScarce = params.excludeScarce ?? false;
 
     let buyPrice = 0;
     for (let i = 1; i <= lp.nItems; i++) {
@@ -193,7 +194,7 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
       if (!detail) continue;
 
       if (isBought) {
-        const [price, src] = getAvailablePrice(entry.stats, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags);
+        const [price, src] = getAvailablePrice(entry.stats, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags, excludeScarce);
         buyPrice += price;
         detail.source = src ?? undefined;
         detail.price = price;
@@ -245,7 +246,7 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
       const preset = (weapon.presets || []).find(p => p.id === selectedBaseId)
         || (weapon.all_presets || []).find(p => p.id === selectedBaseId);
       if (preset) {
-        const [filteredPrice, src, , purchaseLabel] = getAvailablePrice(preset, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags);
+        const [filteredPrice, src, , purchaseLabel] = getAvailablePrice(preset, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags, excludeScarce);
         basePrice = filteredPrice;
         let source = src ?? undefined;
         let label = purchaseLabel ?? undefined;

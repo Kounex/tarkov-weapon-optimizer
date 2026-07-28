@@ -13,6 +13,8 @@
     "flea_market_access": "Bleší trh",
     "barter_available": "Bartry",
     "barter_exclude_dogtags": "Vyloučit výměny se psími známkami",
+    "exclude_scarce": "Vyloučit vzácné nabídky",
+    "exclude_scarce_tooltip": "Při optimalizaci přeskočit nabídky blešího trhu s 3 nebo méně aktivními inzeráty",
     "include_exclude": "Filtr modů",
     "require_categories": "Hledat kategorie...",
     "require_items": "Hledat mody...",

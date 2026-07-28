@@ -13,6 +13,8 @@
     "flea_market_access": "플리마켓",
     "barter_available": "물물교환",
     "barter_exclude_dogtags": "인식표 교환 제외",
+    "exclude_scarce": "희귀 매물 제외",
+    "exclude_scarce_tooltip": "최적화 시 활성 매물이 3개 이하인 플리마켓 제안을 건너뜁니다",
     "include_exclude": "모드 필터",
     "require_categories": "카테고리 검색...",
     "require_items": "모드 검색...",

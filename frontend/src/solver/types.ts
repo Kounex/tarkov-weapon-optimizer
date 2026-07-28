@@ -200,6 +200,8 @@ export interface SolveParams {
   fleaAvailable?: boolean;
   barterAvailable?: boolean;
   barterExcludeDogtags?: boolean;
+  /** When true, flea offers with last_offer_count <= 3 (the "scarce" badge threshold) are skipped during price resolution. */
+  excludeScarce?: boolean;
   playerLevel?: number | null;
   /**
    * User-forced build base: a preset item ID from weapon.presets, or the

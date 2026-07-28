@@ -13,6 +13,8 @@ interface LevelConfigProps {
   onBarterChange: (v: boolean) => void
   barterExcludeDogtags: boolean
   onBarterExcludeDogsChange: (v: boolean) => void
+  excludeScarce: boolean
+  onExcludeScarceChange: (v: boolean) => void
   playerLevel: number
   onPlayerLevelChange: (v: number) => void
   traderLevels: TraderLevels
@@ -26,6 +28,8 @@ export function LevelConfig({
   onBarterChange,
   barterExcludeDogtags,
   onBarterExcludeDogsChange,
+  excludeScarce,
+  onExcludeScarceChange,
   playerLevel,
   onPlayerLevelChange,
   traderLevels,
@@ -37,13 +41,21 @@ export function LevelConfig({
       {
         key: 'market',
         label: <span style={{ userSelect: 'none' }}>{t('sidebar.player_trader_access')}</span>,
-        extra: <Tooltip title={t('ui.reset')}><Button type="text" size="small" icon={<UndoOutlined />} onClick={(e) => { e.stopPropagation(); onFleaChange(true); onBarterChange(false); onBarterExcludeDogsChange(true); onPlayerLevelChange(60); onTraderLevelsChange({ ...DEFAULT_TRADER_LEVELS }) }} /></Tooltip>,
+        extra: <Tooltip title={t('ui.reset')}><Button type="text" size="small" icon={<UndoOutlined />} onClick={(e) => { e.stopPropagation(); onFleaChange(true); onBarterChange(false); onBarterExcludeDogsChange(true); onExcludeScarceChange(false); onPlayerLevelChange(60); onTraderLevelsChange({ ...DEFAULT_TRADER_LEVELS }) }} /></Tooltip>,
         children: (
           <Space direction="vertical" style={{ width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text type="secondary" style={{ fontSize: 12 }}>{t('sidebar.flea_market_access')}</Text>
               <Segmented size="small" value={fleaAvailable ? 'on' : 'off'} onChange={v => onFleaChange(v === 'on')} options={[{ label: t('ui.on'), value: 'on' }, { label: t('ui.off'), value: 'off' }]} />
             </div>
+            {fleaAvailable && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <Tooltip title={t('sidebar.exclude_scarce_tooltip')}>
+                  <Text type="secondary" style={{ fontSize: 12 }}>{t('sidebar.exclude_scarce')}</Text>
+                </Tooltip>
+                <Segmented size="small" value={excludeScarce ? 'on' : 'off'} onChange={v => onExcludeScarceChange(v === 'on')} options={[{ label: t('ui.on'), value: 'on' }, { label: t('ui.off'), value: 'off' }]} />
+              </div>
+            )}
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <Text type="secondary" style={{ fontSize: 12 }}>{t('sidebar.barter_available')}</Text>
               <Segmented size="small" value={barterAvailable ? 'on' : 'off'} onChange={v => onBarterChange(v === 'on')} options={[{ label: t('ui.on'), value: 'on' }, { label: t('ui.off'), value: 'off' }]} />

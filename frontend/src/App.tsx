@@ -82,8 +82,8 @@ function readStoredGameMode(): GameMode {
   return result
 }
 
-function readStoredLevelConfig(): { playerLevel: number; fleaAvailable: boolean; barterAvailable: boolean; barterExcludeDogtags: boolean; traderLevels: TraderLevels } {
-  const fallback = { playerLevel: 60, fleaAvailable: true, barterAvailable: false, barterExcludeDogtags: true, traderLevels: { ...DEFAULT_TRADER_LEVELS } }
+function readStoredLevelConfig(): { playerLevel: number; fleaAvailable: boolean; barterAvailable: boolean; barterExcludeDogtags: boolean; excludeScarce: boolean; traderLevels: TraderLevels } {
+  const fallback = { playerLevel: 60, fleaAvailable: true, barterAvailable: false, barterExcludeDogtags: true, excludeScarce: false, traderLevels: { ...DEFAULT_TRADER_LEVELS } }
   try {
     const raw = localStorage.getItem(LEVEL_CONFIG_STORAGE_KEY)
     if (!raw) return fallback
@@ -92,6 +92,7 @@ function readStoredLevelConfig(): { playerLevel: number; fleaAvailable: boolean;
       fleaAvailable?: unknown
       barterAvailable?: unknown
       barterExcludeDogtags?: unknown
+      excludeScarce?: unknown
       traderLevels?: Record<string, unknown>
     }
     const traderLevels = { ...DEFAULT_TRADER_LEVELS }
@@ -110,7 +111,8 @@ function readStoredLevelConfig(): { playerLevel: number; fleaAvailable: boolean;
     const fleaAvailable = typeof o.fleaAvailable === 'boolean' ? o.fleaAvailable : fallback.fleaAvailable
     const barterAvailable = typeof o.barterAvailable === 'boolean' ? o.barterAvailable : fallback.barterAvailable
     const barterExcludeDogtags = typeof o.barterExcludeDogtags === 'boolean' ? o.barterExcludeDogtags : fallback.barterExcludeDogtags
-    return { playerLevel, fleaAvailable, barterAvailable, barterExcludeDogtags, traderLevels }
+    const excludeScarce = typeof o.excludeScarce === 'boolean' ? o.excludeScarce : fallback.excludeScarce
+    return { playerLevel, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, traderLevels }
   } catch {
     return fallback
   }
@@ -242,6 +244,7 @@ function AppContent({
   const [fleaAvailable, setFleaAvailable] = useState(initialLevelConfig.fleaAvailable)
   const [barterAvailable, setBarterAvailable] = useState(initialLevelConfig.barterAvailable)
   const [barterExcludeDogtags, setBarterExcludeDogtags] = useState(initialLevelConfig.barterExcludeDogtags)
+  const [excludeScarce, setExcludeScarce] = useState(initialLevelConfig.excludeScarce)
   const [solverPrecision, setSolverPrecision] = useState<SolverPrecisionMode>(() => {
     const s = localStorage.getItem('solverPrecision')
     if (s === 'fast' || s === 'precise' || s === 'auto') return s
@@ -318,9 +321,9 @@ function AppContent({
   useEffect(() => {
     localStorage.setItem(
       LEVEL_CONFIG_STORAGE_KEY,
-      JSON.stringify({ playerLevel, fleaAvailable, barterAvailable, barterExcludeDogtags, traderLevels }),
+      JSON.stringify({ playerLevel, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, traderLevels }),
     )
-  }, [playerLevel, fleaAvailable, barterAvailable, barterExcludeDogtags, traderLevels])
+  }, [playerLevel, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, traderLevels])
   const themeSelectOptions = useMemo(
     () => [
       // Light themes disabled — item images lack transparent backgrounds
@@ -425,6 +428,7 @@ function AppContent({
       flea_available: fleaAvailable,
       barter_available: barterAvailable,
       barter_exclude_dogtags: barterExcludeDogtags,
+      exclude_scarce: excludeScarce,
       player_level: playerLevel,
     }, gameMode, i18n.language || 'en')
       .then(data => {
@@ -441,7 +445,7 @@ function AppContent({
         if (seq !== presetRequestSeq.current) return
         setLoadingPresets(false)
       })
-  }, [selectedGunId, gameMode, i18n.language, traderLevels, fleaAvailable, barterAvailable, barterExcludeDogtags, playerLevel])
+  }, [selectedGunId, gameMode, i18n.language, traderLevels, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, playerLevel])
 
   const categories = useMemo(() => {
     const filtered = selectedCaliber === 'All' ? guns : guns.filter(g => g.caliber === selectedCaliber)
@@ -569,6 +573,7 @@ function AppContent({
         flea_available: fleaAvailable,
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
+        exclude_scarce: excludeScarce,
         preset_id: selectedPresetId,
         precise_mode: solverPrecision,
       }, gameMode, i18n.language || 'en')
@@ -612,6 +617,7 @@ function AppContent({
         flea_available: fleaAvailable,
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
+        exclude_scarce: excludeScarce,
         preset_id: selectedPresetId,
         precise_mode: solverPrecision,
       }, gameMode, i18n.language || 'en')
@@ -657,6 +663,7 @@ function AppContent({
         flea_available: fleaAvailable,
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
+        exclude_scarce: excludeScarce,
         precise_mode: true,
       }, gameMode, i18n.language || 'en')
       setGunsmithResult(res)
@@ -770,6 +777,7 @@ function AppContent({
         flea_available: fleaAvailable,
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
+        exclude_scarce: excludeScarce,
         precise_mode: solverPrecision,
       }, gameMode, i18n.language || 'en')
       setImportResult(res)
@@ -848,6 +856,8 @@ function AppContent({
     onBarterChange: setBarterAvailable,
     barterExcludeDogtags,
     onBarterExcludeDogsChange: setBarterExcludeDogtags,
+    excludeScarce,
+    onExcludeScarceChange: setExcludeScarce,
     playerLevel,
     onPlayerLevelChange: setPlayerLevel,
     traderLevels,
@@ -955,6 +965,8 @@ function AppContent({
               onBarterChange={setBarterAvailable}
               barterExcludeDogtags={barterExcludeDogtags}
               onBarterExcludeDogsChange={setBarterExcludeDogtags}
+              excludeScarce={excludeScarce}
+              onExcludeScarceChange={setExcludeScarce}
               playerLevel={playerLevel}
               onPlayerLevelChange={setPlayerLevel}
               traderLevels={traderLevels}
@@ -999,6 +1011,8 @@ function AppContent({
               onBarterChange={setBarterAvailable}
               barterExcludeDogtags={barterExcludeDogtags}
               onBarterExcludeDogsChange={setBarterExcludeDogtags}
+              excludeScarce={excludeScarce}
+              onExcludeScarceChange={setExcludeScarce}
               playerLevel={playerLevel}
               onPlayerLevelChange={setPlayerLevel}
               traderLevels={traderLevels}

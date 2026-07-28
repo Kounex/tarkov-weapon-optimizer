@@ -13,6 +13,8 @@
     "flea_market_access": "Bit Pazarı",
     "barter_available": "Takas",
     "barter_exclude_dogtags": "Künye takaslarını hariç tut",
+    "exclude_scarce": "Kıt teklifleri hariç tut",
+    "exclude_scarce_tooltip": "Optimize ederken 3 veya daha az aktif ilanı olan bit pazarı tekliflerini atla",
     "include_exclude": "Mod Filtresi",
     "require_categories": "Kategori ara...",
     "require_items": "Mod ara...",

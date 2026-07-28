@@ -13,6 +13,8 @@
     "flea_market_access": "Flea Market",
     "barter_available": "Schimburi",
     "barter_exclude_dogtags": "Exclude schimburi cu plăcuțe",
+    "exclude_scarce": "Exclude ofertele rare",
+    "exclude_scarce_tooltip": "Omite ofertele de pe piața de vechituri cu 3 sau mai puține anunțuri active la optimizare",
     "include_exclude": "Filtru Moduri",
     "require_categories": "Caută categorii...",
     "require_items": "Caută moduri...",

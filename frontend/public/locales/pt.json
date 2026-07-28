@@ -13,6 +13,8 @@
     "flea_market_access": "Mercado de Pulgas",
     "barter_available": "Trocas",
     "barter_exclude_dogtags": "Excluir trocas com dog tags",
+    "exclude_scarce": "Excluir ofertas escassas",
+    "exclude_scarce_tooltip": "Ignorar ofertas do mercado de pulgas com 3 ou menos anúncios ativos ao otimizar",
     "include_exclude": "Filtro de Mods",
     "require_categories": "Pesquisar categorias...",
     "require_items": "Pesquisar mods...",

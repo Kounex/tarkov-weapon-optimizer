@@ -13,6 +13,8 @@
     "flea_market_access": "Marché aux puces",
     "barter_available": "Trocs",
     "barter_exclude_dogtags": "Exclure les trocs de plaques",
+    "exclude_scarce": "Exclure les offres rares",
+    "exclude_scarce_tooltip": "Ignorer les offres du marché aux puces avec 3 annonces actives ou moins lors de l'optimisation",
     "include_exclude": "Filtre de mods",
     "require_categories": "Rechercher catégories...",
     "require_items": "Rechercher mods...",

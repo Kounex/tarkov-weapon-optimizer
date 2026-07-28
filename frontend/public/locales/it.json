@@ -13,6 +13,8 @@
     "flea_market_access": "Mercato Pulci",
     "barter_available": "Baratti",
     "barter_exclude_dogtags": "Escludi baratti con piastrine",
+    "exclude_scarce": "Escludi offerte scarse",
+    "exclude_scarce_tooltip": "Salta le offerte del mercato delle pulci con 3 o meno annunci attivi durante l'ottimizzazione",
     "include_exclude": "Filtro Mod",
     "require_categories": "Cerca categorie...",
     "require_items": "Cerca mod...",

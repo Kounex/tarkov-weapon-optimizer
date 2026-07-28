@@ -13,6 +13,8 @@
     "flea_market_access": "Flohmarkt",
     "barter_available": "Tauschhandel",
     "barter_exclude_dogtags": "Hundemarken-Tausch ausschließen",
+    "exclude_scarce": "Knappe Angebote ausschließen",
+    "exclude_scarce_tooltip": "Flohmarkt-Angebote mit 3 oder weniger aktiven Anzeigen bei der Optimierung überspringen",
     "include_exclude": "Mod-Filter",
     "require_categories": "Kategorien suchen...",
     "require_items": "Mods suchen...",

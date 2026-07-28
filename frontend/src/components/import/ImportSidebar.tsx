@@ -26,6 +26,8 @@ interface ImportSidebarProps {
   onBarterChange: (v: boolean) => void
   barterExcludeDogtags: boolean
   onBarterExcludeDogsChange: (v: boolean) => void
+  excludeScarce: boolean
+  onExcludeScarceChange: (v: boolean) => void
   playerLevel: number
   onPlayerLevelChange: (v: number) => void
   traderLevels: TraderLevels
@@ -50,6 +52,8 @@ export function ImportSidebar({
   onBarterChange,
   barterExcludeDogtags,
   onBarterExcludeDogsChange,
+  excludeScarce,
+  onExcludeScarceChange,
   playerLevel,
   onPlayerLevelChange,
   traderLevels,
@@ -129,6 +133,8 @@ export function ImportSidebar({
         onBarterChange={onBarterChange}
         barterExcludeDogtags={barterExcludeDogtags}
         onBarterExcludeDogsChange={onBarterExcludeDogsChange}
+        excludeScarce={excludeScarce}
+        onExcludeScarceChange={onExcludeScarceChange}
         playerLevel={playerLevel}
         onPlayerLevelChange={onPlayerLevelChange}
         traderLevels={traderLevels}

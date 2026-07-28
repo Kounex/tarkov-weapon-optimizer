@@ -48,6 +48,8 @@ export interface OptimizeRequest {
   flea_available?: boolean;
   barter_available?: boolean;
   barter_exclude_dogtags?: boolean;
+  /** Skip flea offers with <=3 active listings ("scarce") during price resolution. Default off. */
+  exclude_scarce?: boolean;
   player_level?: number;
   /** Boolean values are normalized: true → precise, false → fast. */
   precise_mode?: boolean | SolverPrecisionMode;
@@ -327,6 +329,8 @@ export interface BaseAvailabilitySettings {
   flea_available?: boolean;
   barter_available?: boolean;
   barter_exclude_dogtags?: boolean;
+  /** Skip flea offers with <=3 active listings ("scarce") during price resolution. Default off. */
+  exclude_scarce?: boolean;
   player_level?: number;
 }
 

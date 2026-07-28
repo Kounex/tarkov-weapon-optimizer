@@ -152,6 +152,7 @@ export function buildLP(params: SolveParams): LPResult {
       params.playerLevel ?? null,
       params.barterAvailable ?? false,
       params.barterExcludeDogtags ?? false,
+      params.excludeScarce ?? false,
     );
     if (pPrice <= 0 && !pAvail) continue; // skip unpurchasable
     presetAvail.push({ preset, price: pPrice });
@@ -222,6 +223,7 @@ export function buildLP(params: SolveParams): LPResult {
         params.playerLevel ?? null,
         params.barterAvailable ?? false,
         params.barterExcludeDogtags ?? false,
+        params.excludeScarce ?? false,
       );
     }
 

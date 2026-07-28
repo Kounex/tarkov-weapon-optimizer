@@ -13,6 +13,8 @@
     "flea_market_access": "Mercadillo",
     "barter_available": "Intercambios",
     "barter_exclude_dogtags": "Excluir trueques con chapas",
+    "exclude_scarce": "Excluir ofertas escasas",
+    "exclude_scarce_tooltip": "Omitir ofertas del mercadillo con 3 o menos anuncios activos al optimizar",
     "include_exclude": "Filtro de Mods",
     "require_categories": "Buscar categorías...",
     "require_items": "Buscar mods...",

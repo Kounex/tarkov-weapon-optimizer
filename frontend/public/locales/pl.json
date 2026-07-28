@@ -13,6 +13,8 @@
     "flea_market_access": "Pchli Targ",
     "barter_available": "Wymiana barterowa",
     "barter_exclude_dogtags": "Wyklucz wymiany z nieśmiertelnikami",
+    "exclude_scarce": "Wyklucz rzadkie oferty",
+    "exclude_scarce_tooltip": "Pomiń oferty z pchlego targu z 3 lub mniej aktywnymi ogłoszeniami podczas optymalizacji",
     "include_exclude": "Filtr Modów",
     "require_categories": "Szukaj kategorii...",
     "require_items": "Szukaj modów...",
