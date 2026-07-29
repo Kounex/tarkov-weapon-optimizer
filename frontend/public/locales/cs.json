@@ -41,6 +41,8 @@
     "ready_description": "Vyberte úkol gunsmithe pro vygenerování sestavy"
   },
   "explore": {
+    "view_build": "Zobrazit",
+    "build_details": "Detaily sestavy",
     "tradeoff_strategy": "Strategie kompromisů",
     "ready_description": "Vyberte zbraň a strategii analýzy, prozkoumejte Pareto hranici",
     "limit_price": "Max Price",

@@ -1,10 +1,14 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Alert, Button, Card, Table, Tag, Typography, theme } from 'antd'
-import { BarChartOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ExportOutlined } from '@ant-design/icons'
+import { Alert, Button, Card, Modal, Table, Tag, Typography, theme } from 'antd'
+import { BarChartOutlined, CheckCircleOutlined, ExclamationCircleOutlined, ExportOutlined, EyeOutlined } from '@ant-design/icons'
 import { compressToEncodedURIComponent } from 'lz-string'
 import { ScatterChart, Scatter, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ZAxis } from 'recharts'
 import { EmptyState } from '../common/EmptyState'
-import type { ExplorePoint, SolverPrecisionMode } from '../../api/client'
+import { StatsCards } from '../common/StatsCards'
+import { BuildManifest } from '../common/BuildManifest'
+import { UsingPresetCard } from '../common/UsingPresetCard'
+import type { ExplorePoint, OptimizeResponse, SolverPrecisionMode } from '../../api/client'
 
 const { Text } = Typography
 const { useToken } = theme
@@ -29,6 +33,8 @@ const EFTFORGE_URL = 'https://www.eftforge.com'
 export function ExploreResult({ exploreResult, solveTime, explorePrecision, resultTradeoff, exploring, onExplore, disabled, weaponId }: ExploreResultProps) {
   const { t } = useTranslation()
   const { token } = useToken()
+  const [detailPoint, setDetailPoint] = useState<ExplorePoint | null>(null)
+  const [detailViewMode, setDetailViewMode] = useState<'detailed' | 'compact' | 'table'>('detailed')
   const handleOpenInEFTForge = (point: ExplorePoint) => {
     if (!weaponId || !point.slot_pairs?.length) return
     const payload = { v: 1, g: weaponId, p: point.slot_pairs }
@@ -104,8 +110,61 @@ export function ExploreResult({ exploreResult, solveTime, explorePrecision, resu
         { title: t('sidebar.recoil_h'), dataIndex: 'recoil_h', render: (v: number) => <Text>{v.toFixed(1)}</Text> },
         { title: t('sidebar.price'), dataIndex: 'price', render: (v: number) => <Text style={{ color: token.colorWarning }}>₽{v.toLocaleString()}</Text> },
         { title: t('ui.table_items'), dataIndex: 'selected_items', render: (items: unknown[]) => t('ui.item_count', { count: items.length }) },
+        {
+          title: '',
+          dataIndex: 'slot_pairs',
+          render: (_: unknown, record: ExplorePoint) => (
+            <Button size="small" icon={<EyeOutlined />} onClick={() => setDetailPoint(record)}>{t('explore.view_build')}</Button>
+          ),
+        },
         ...(weaponId ? [{ title: '', dataIndex: 'slot_pairs', render: (_: unknown, record: ExplorePoint) => record.slot_pairs?.length ? <Button size="small" icon={<ExportOutlined />} onClick={() => handleOpenInEFTForge(record)}>EFTForge</Button> : null }] : []),
       ]} />
+      <Modal
+        open={detailPoint !== null}
+        onCancel={() => setDetailPoint(null)}
+        footer={null}
+        width="min(1100px, 96vw)"
+        title={t('explore.build_details')}
+        destroyOnHidden
+        styles={{ body: { maxHeight: '75vh', overflowY: 'auto' } }}
+      >
+        {detailPoint && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+            {detailPoint.final_stats && (
+              <StatsCards
+                ergonomics={detailPoint.final_stats.ergonomics}
+                recoilVertical={detailPoint.final_stats.recoil_vertical}
+                recoilHorizontal={detailPoint.final_stats.recoil_horizontal}
+                weight={detailPoint.final_stats.total_weight}
+                price={detailPoint.final_stats.total_price}
+                moa={detailPoint.final_stats.moa}
+              />
+            )}
+            {detailPoint.selected_preset && (
+              <UsingPresetCard
+                preset={detailPoint.selected_preset}
+                retainedItems={detailPoint.selected_items.filter(i => detailPoint.selected_preset!.items.includes(i.id))}
+                compactMode={detailViewMode === 'compact' || detailViewMode === 'table'}
+                viewMode={detailViewMode}
+              />
+            )}
+            <BuildManifest
+              result={{
+                status: detailPoint.status,
+                selected_items: detailPoint.selected_items,
+                selected_preset: detailPoint.selected_preset,
+                slot_pairs: detailPoint.slot_pairs,
+                final_stats: detailPoint.final_stats,
+                solve_time_ms: detailPoint.solve_time_ms,
+                objective_value: 0,
+              } as OptimizeResponse}
+              viewMode={detailViewMode}
+              onViewModeChange={setDetailViewMode}
+              weaponId={weaponId}
+            />
+          </div>
+        )}
+      </Modal>
     </div>
   )
 }

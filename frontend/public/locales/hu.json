@@ -41,6 +41,8 @@
     "ready_description": "Válasszon fegyverkovács feladatot egy build létrehozásához"
   },
   "explore": {
+    "view_build": "Megnézés",
+    "build_details": "Build részletei",
     "tradeoff_strategy": "Kompromisszum stratégia",
     "ready_description": "Válasszon fegyvert és elemzési stratégiát, fedezze fel a Pareto-határt",
     "limit_price": "Max Price",

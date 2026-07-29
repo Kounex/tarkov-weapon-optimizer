@@ -41,6 +41,8 @@
     "ready_description": "ガンスミスタスクを選択してビルドを生成"
   },
   "explore": {
+    "view_build": "表示",
+    "build_details": "ビルド詳細",
     "tradeoff_strategy": "トレードオフ戦略",
     "ready_description": "武器と分析戦略を選択、パレート境界を探索",
     "limit_price": "Max Price",

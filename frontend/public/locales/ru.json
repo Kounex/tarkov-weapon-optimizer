@@ -41,6 +41,8 @@
     "ready_description": "Выберите задание оружейника для создания сборки"
   },
   "explore": {
+    "view_build": "Открыть",
+    "build_details": "Детали сборки",
     "tradeoff_strategy": "Стратегия компромиссов",
     "ready_description": "Выберите оружие и стратегию анализа, исследуйте границу Парето",
     "limit_price": "Max Price",

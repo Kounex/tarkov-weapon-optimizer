@@ -41,6 +41,8 @@
     "ready_description": "Wybierz zadanie rusznikarza, aby wygenerować build"
   },
   "explore": {
+    "view_build": "Podgląd",
+    "build_details": "Szczegóły zestawu",
     "tradeoff_strategy": "Strategia Kompromisu",
     "ready_description": "Wybierz broń i strategię analizy, eksploruj granicę Pareto",
     "limit_price": "Max Price",

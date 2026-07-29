@@ -41,6 +41,8 @@
     "ready_description": "Vyberte úlohu gunsmithe pre vygenerovanie zostavy"
   },
   "explore": {
+    "view_build": "Zobraziť",
+    "build_details": "Detaily zostavy",
     "tradeoff_strategy": "Stratégia kompromisov",
     "ready_description": "Vyberte zbraň a stratégiu analýzy, preskúmajte Pareto hranicu",
     "limit_price": "Max Price",

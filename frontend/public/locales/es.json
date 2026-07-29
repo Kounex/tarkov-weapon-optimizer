@@ -41,6 +41,8 @@
     "ready_description": "Selecciona una tarea de armero para generar una configuración"
   },
   "explore": {
+    "view_build": "Ver",
+    "build_details": "Detalles de la build",
     "tradeoff_strategy": "Estrategia de Compensación",
     "ready_description": "Selecciona arma y estrategia de análisis, explora frontera de Pareto",
     "limit_price": "Max Price",

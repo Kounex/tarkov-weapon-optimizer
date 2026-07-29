@@ -46,23 +46,29 @@ export function BuildManifest({ result, viewMode, onViewModeChange, onCopy, weap
       key: 'name',
       render: (text: string, record: ItemDetail) => (
         <Space size={8}>
-          <div style={{ display: 'flex', gap: 4 }}>
-            <Button
-              size="small"
-              type="text"
-              icon={lockedIds?.includes(record.id) ? <LockOutlined style={{ color: '#1890ff' }} /> : <UnlockOutlined style={{ opacity: 0.3 }} />}
-              onClick={() => onToggleLock?.(record.id)}
-              title={t('ui.lock_tooltip')}
-            />
-            <Button
-              size="small"
-              type="text"
-              danger={excludedIds?.includes(record.id)}
-              icon={<StopOutlined style={excludedIds?.includes(record.id) ? undefined : { opacity: 0.3 }} />}
-              onClick={() => onToggleExclude?.(record.id)}
-              title={t('ui.exclude_tooltip')}
-            />
-          </div>
+          {(onToggleLock || onToggleExclude) && (
+            <div style={{ display: 'flex', gap: 4 }}>
+              {onToggleLock && (
+                <Button
+                  size="small"
+                  type="text"
+                  icon={lockedIds?.includes(record.id) ? <LockOutlined style={{ color: '#1890ff' }} /> : <UnlockOutlined style={{ opacity: 0.3 }} />}
+                  onClick={() => onToggleLock(record.id)}
+                  title={t('ui.lock_tooltip')}
+                />
+              )}
+              {onToggleExclude && (
+                <Button
+                  size="small"
+                  type="text"
+                  danger={excludedIds?.includes(record.id)}
+                  icon={<StopOutlined style={excludedIds?.includes(record.id) ? undefined : { opacity: 0.3 }} />}
+                  onClick={() => onToggleExclude(record.id)}
+                  title={t('ui.exclude_tooltip')}
+                />
+              )}
+            </div>
+          )}
           <ItemTooltip item={record}>
              <Text strong style={{ fontSize: 13, cursor: 'pointer' }}>{text}</Text>
           </ItemTooltip>

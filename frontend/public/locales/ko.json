@@ -41,6 +41,8 @@
     "ready_description": "건스미스 과제를 선택하여 빌드 생성"
   },
   "explore": {
+    "view_build": "보기",
+    "build_details": "빌드 상세",
     "tradeoff_strategy": "절충 전략",
     "ready_description": "무기와 분석 전략을 선택하여 파레토 경계 탐색",
     "limit_price": "Max Price",

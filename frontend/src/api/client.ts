@@ -188,6 +188,8 @@ export interface ExplorePoint {
   selected_items: ItemDetail[];
   selected_preset?: PresetDetail;
   slot_pairs?: [string, string][];
+  /** Full stats of this point's build (for the in-page build detail view). */
+  final_stats?: FinalStats;
   status: string;
   solve_time_ms?: number;
   /** See OptimizeResponse.preset_unavailable_fallback */

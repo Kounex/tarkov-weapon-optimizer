@@ -41,6 +41,8 @@
     "ready_description": "Sélectionnez une tâche d'armurier pour générer une configuration"
   },
   "explore": {
+    "view_build": "Voir",
+    "build_details": "Détails de l'équipement",
     "tradeoff_strategy": "Stratégie de compromis",
     "ready_description": "Sélectionnez arme et stratégie d'analyse, explorez frontière de Pareto",
     "limit_price": "Max Price",

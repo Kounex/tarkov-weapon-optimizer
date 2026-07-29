@@ -41,6 +41,8 @@
     "ready_description": "Bir build oluşturmak için silah ustası görevi seçin"
   },
   "explore": {
+    "view_build": "Görüntüle",
+    "build_details": "Build detayları",
     "tradeoff_strategy": "Ödünleşim Stratejisi",
     "ready_description": "Silah ve analiz stratejisi seçin, Pareto sınırını keşfedin",
     "limit_price": "Max Price",

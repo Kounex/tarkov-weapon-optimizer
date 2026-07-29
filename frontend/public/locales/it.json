@@ -41,6 +41,8 @@
     "ready_description": "Seleziona un compito armaiolo per generare una build"
   },
   "explore": {
+    "view_build": "Vedi",
+    "build_details": "Dettagli build",
     "tradeoff_strategy": "Strategia di Compromesso",
     "ready_description": "Seleziona arma e strategia di analisi, esplora frontiera di Pareto",
     "limit_price": "Max Price",

@@ -41,6 +41,8 @@
     "ready_description": "Wählen Sie eine Gunsmith-Aufgabe, um eine Build zu generieren"
   },
   "explore": {
+    "view_build": "Ansehen",
+    "build_details": "Build-Details",
     "tradeoff_strategy": "Kompromiss-Strategie",
     "ready_description": "Waffe und Analysestrategie wählen, Pareto-Grenze erkunden",
     "limit_price": "Max Price",

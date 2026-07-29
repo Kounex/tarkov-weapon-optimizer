@@ -2,6 +2,11 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.6.5] — 2026-07-28
+
+### Added
+- **Full in-page build view for Explore frontier builds.** Each build in the Explore results list now has a **View** button opening a modal with the exact Optimize-tab build rendering — stat cards (ergo/recoil/MOA/weight/total cost), preset card, and the full build manifest with item images, prices, trader icons, barter tooltips, and scarce/stale/unstable badges (Detailed/Compact/Table view modes included). Components are shared with the Optimize tab, not forked; the EFT Forge external link remains as a secondary action. i18n in all 16 locales.
+
 ## [v2.6.4] — 2026-07-28
 
 ### Added

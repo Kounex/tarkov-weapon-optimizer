@@ -107,6 +107,7 @@ export async function explorePareto(params: ParetoParams): Promise<ExplorePoint[
       selected_items: result.selected_items,
       selected_preset: result.selected_preset,
       slot_pairs: result.slot_pairs,
+      final_stats: result.final_stats,
       status: result.status,
       solve_time_ms: result.solve_time_ms,
       preset_unavailable_fallback: result.preset_unavailable_fallback,

@@ -41,6 +41,8 @@
     "ready_description": "选一个枪匠任务，自动生成满足条件的配装方案。"
   },
   "explore": {
+    "view_build": "查看",
+    "build_details": "配置详情",
     "tradeoff_strategy": "侧重方向",
     "ready_description": "选好武器和分析侧重，查看人机、后坐与价格之间的权衡。",
     "limit_price": "最高价格",

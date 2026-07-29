@@ -41,6 +41,8 @@
     "ready_description": "Select a gunsmith task to generate a build that meets constraints"
   },
   "explore": {
+    "view_build": "View",
+    "build_details": "Build details",
     "tradeoff_strategy": "Trade-off Strategy",
     "ready_description": "Select weapon and analysis strategy, explore Pareto frontier",
     "limit_price": "Max Price",

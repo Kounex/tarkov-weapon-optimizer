@@ -41,6 +41,8 @@
     "ready_description": "Selectează o sarcină de armurier pentru a genera o configurație"
   },
   "explore": {
+    "view_build": "Vezi",
+    "build_details": "Detalii build",
     "tradeoff_strategy": "Strategie de Compromis",
     "ready_description": "Selectează arma și strategia de analiză, explorează frontiera Pareto",
     "limit_price": "Max Price",
