@@ -14,8 +14,11 @@ jobs:
   # Per-arch builds on NATIVE runners (no QEMU). The previous single-job
   # approach built linux/arm64 through QEMU emulation, which intermittently
   # hung for hours inside `npm ci` (hit on v2.6.2 and v2.6.5). Each matrix
-  # leg pushes its single-arch image by digest; the merge job below turns
-  # the digests into the multi-arch manifest with the real semver tags.
+  # leg pushes its single-arch image under a temporary per-arch tag; the
+  # merge job below turns those into the multi-arch manifest with the real
+  # semver tags. (We use per-arch tags instead of push-by-digest because the
+  # documented type=image,"name=...,push-by-digest=true" quoting gets
+  # misparsed as a ref list by the buildx version on current runners.)
   build-images:
     runs-on: ${{ matrix.os }}
     timeout-minutes: 30
@@ -23,10 +26,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { component: frontend, context: ./frontend, image: tarkov-optimizer-frontend, title: 'Tarkov Weapon Optimizer', description: 'Client-side weapon mod optimizer for Escape from Tarkov', platform: linux/amd64, os: ubuntu-latest }
-          - { component: frontend, context: ./frontend, image: tarkov-optimizer-frontend, title: 'Tarkov Weapon Optimizer', description: 'Client-side weapon mod optimizer for Escape from Tarkov', platform: linux/arm64, os: ubuntu-24.04-arm }
-          - { component: vision-proxy, context: ./vision-proxy, image: tarkov-vision-proxy, title: 'Tarkov Vision Proxy', description: 'Gemini vision proxy for screenshot weapon detection', platform: linux/amd64, os: ubuntu-latest }
-          - { component: vision-proxy, context: ./vision-proxy, image: tarkov-vision-proxy, title: 'Tarkov Vision Proxy', description: 'Gemini vision proxy for screenshot weapon detection', platform: linux/arm64, os: ubuntu-24.04-arm }
+          - { component: frontend, context: ./frontend, image: tarkov-optimizer-frontend, title: 'Tarkov Weapon Optimizer', description: 'Client-side weapon mod optimizer for Escape from Tarkov', platform: linux/amd64, slug: amd64, os: ubuntu-latest }
+          - { component: frontend, context: ./frontend, image: tarkov-optimizer-frontend, title: 'Tarkov Weapon Optimizer', description: 'Client-side weapon mod optimizer for Escape from Tarkov', platform: linux/arm64, slug: arm64, os: ubuntu-24.04-arm }
+          - { component: vision-proxy, context: ./vision-proxy, image: tarkov-vision-proxy, title: 'Tarkov Vision Proxy', description: 'Gemini vision proxy for screenshot weapon detection', platform: linux/amd64, slug: amd64, os: ubuntu-latest }
+          - { component: vision-proxy, context: ./vision-proxy, image: tarkov-vision-proxy, title: 'Tarkov Vision Proxy', description: 'Gemini vision proxy for screenshot weapon detection', platform: linux/arm64, slug: arm64, os: ubuntu-24.04-arm }
     steps:
       - uses: actions/checkout@v4
 
@@ -43,13 +46,13 @@ jobs:
       - name: Compute lowercase image name
         run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${{ matrix.image }}" >> "$GITHUB_ENV"
 
-      - name: Build and push by digest
-        id: build
+      - name: Build and push arch image
         uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
           platforms: ${{ matrix.platform }}
-          outputs: type=image,"name=${{ env.IMAGE_NAME }},push-by-digest=true,name-canonical=true",push=true
+          push: true
+          tags: ${{ env.IMAGE_NAME }}:build-${{ matrix.slug }}
           labels: |
             org.opencontainers.image.title=${{ matrix.title }}
             org.opencontainers.image.description=${{ matrix.description }}
@@ -57,21 +60,7 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.platform }}
           cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ matrix.platform }}
 
-      - name: Export digest
-        run: |
-          mkdir -p "${{ runner.temp }}/digests"
-          digest="${{ steps.build.outputs.digest }}"
-          touch "${{ runner.temp }}/digests/${digest#sha256:}"
-
-      - name: Upload digest
-        uses: actions/upload-artifact@v4
-        with:
-          name: digest-${{ matrix.image }}-${{ matrix.platform }}
-          path: ${{ runner.temp }}/digests/*
-          if-no-files-found: error
-          retention-days: 1
-
-  # Merge per-arch digests into the tagged multi-arch manifests.
+  # Merge per-arch images into the tagged multi-arch manifests.
   merge-images:
     runs-on: ubuntu-latest
     timeout-minutes: 15
@@ -83,13 +72,6 @@ jobs:
           - { component: frontend, image: tarkov-optimizer-frontend, title: 'Tarkov Weapon Optimizer', description: 'Client-side weapon mod optimizer for Escape from Tarkov' }
           - { component: vision-proxy, image: tarkov-vision-proxy, title: 'Tarkov Vision Proxy', description: 'Gemini vision proxy for screenshot weapon detection' }
     steps:
-      - name: Download digests
-        uses: actions/download-artifact@v4
-        with:
-          pattern: digest-${{ matrix.image }}-*
-          path: ${{ runner.temp }}/digests
-          merge-multiple: true
-
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
@@ -120,10 +102,9 @@ jobs:
         run: echo "IMAGE_NAME=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/${{ matrix.image }}" >> "$GITHUB_ENV"
 
       - name: Create manifest list and push
-        working-directory: ${{ runner.temp }}/digests
         run: |
           docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
-            $(printf "${IMAGE_NAME}@sha256:%s " *)
+            "${IMAGE_NAME}:build-amd64" "${IMAGE_NAME}:build-arm64"
         env:
           DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta.outputs.json }}
 
