@@ -11,13 +11,81 @@ permissions:
   packages: write
 
 jobs:
-  build-frontend:
-    runs-on: ubuntu-latest
+  # Per-arch builds on NATIVE runners (no QEMU). The previous single-job
+  # approach built linux/arm64 through QEMU emulation, which intermittently
+  # hung for hours inside `npm ci` (hit on v2.6.2 and v2.6.5). Each matrix
+  # leg pushes its single-arch image by digest; the merge job below turns
+  # the digests into the multi-arch manifest with the real semver tags.
+  build-images:
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { component: frontend, context: ./frontend, image: tarkov-optimizer-frontend, title: 'Tarkov Weapon Optimizer', description: 'Client-side weapon mod optimizer for Escape from Tarkov', platform: linux/amd64, os: ubuntu-latest }
+          - { component: frontend, context: ./frontend, image: tarkov-optimizer-frontend, title: 'Tarkov Weapon Optimizer', description: 'Client-side weapon mod optimizer for Escape from Tarkov', platform: linux/arm64, os: ubuntu-24.04-arm }
+          - { component: vision-proxy, context: ./vision-proxy, image: tarkov-vision-proxy, title: 'Tarkov Vision Proxy', description: 'Gemini vision proxy for screenshot weapon detection', platform: linux/amd64, os: ubuntu-latest }
+          - { component: vision-proxy, context: ./vision-proxy, image: tarkov-vision-proxy, title: 'Tarkov Vision Proxy', description: 'Gemini vision proxy for screenshot weapon detection', platform: linux/arm64, os: ubuntu-24.04-arm }
     steps:
       - uses: actions/checkout@v4
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push by digest
+        id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: ${{ matrix.context }}
+          platforms: ${{ matrix.platform }}
+          outputs: type=image,"name=ghcr.io/${{ github.repository_owner }}/${{ matrix.image }},push-by-digest=true,name-canonical=true",push=true
+          labels: |
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.description }}
+            org.opencontainers.image.source=https://github.com/${{ github.repository }}
+          cache-from: type=gha,scope=${{ matrix.image }}-${{ matrix.platform }}
+          cache-to: type=gha,mode=max,scope=${{ matrix.image }}-${{ matrix.platform }}
+
+      - name: Export digest
+        run: |
+          mkdir -p "${{ runner.temp }}/digests"
+          digest="${{ steps.build.outputs.digest }}"
+          touch "${{ runner.temp }}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v4
+        with:
+          name: digest-${{ matrix.image }}-${{ matrix.platform }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  # Merge per-arch digests into the tagged multi-arch manifests.
+  merge-images:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    needs: build-images
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { component: frontend, image: tarkov-optimizer-frontend, title: 'Tarkov Weapon Optimizer', description: 'Client-side weapon mod optimizer for Escape from Tarkov' }
+          - { component: vision-proxy, image: tarkov-vision-proxy, title: 'Tarkov Vision Proxy', description: 'Gemini vision proxy for screenshot weapon detection' }
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v4
+        with:
+          pattern: digest-${{ matrix.image }}-*
+          path: ${{ runner.temp }}/digests
+          merge-multiple: true
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -33,7 +101,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository_owner }}/tarkov-optimizer-frontend
+          images: ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}
           tags: |
             type=semver,pattern={{version}}
             type=semver,pattern={{major}}.{{minor}}
@@ -41,62 +109,18 @@ jobs:
             type=ref,event=branch
             type=sha,prefix=sha-
           labels: |
-            org.opencontainers.image.title=Tarkov Weapon Optimizer
-            org.opencontainers.image.description=Client-side weapon mod optimizer for Escape from Tarkov
+            org.opencontainers.image.title=${{ matrix.title }}
+            org.opencontainers.image.description=${{ matrix.description }}
             org.opencontainers.image.source=https://github.com/${{ github.repository }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: ./frontend
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Create manifest list and push
+        working-directory: ${{ runner.temp }}/digests
+        run: |
+          docker buildx imagetools create $(jq -cr '.tags | map("-t " + .) | join(" ")' <<< "$DOCKER_METADATA_OUTPUT_JSON") \
+            $(printf "ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}@sha256:%s " *)
+        env:
+          DOCKER_METADATA_OUTPUT_JSON: ${{ steps.meta.outputs.json }}
 
-  build-vision-proxy:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Log in to GHCR
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Extract metadata
-        id: meta
-        uses: docker/metadata-action@v5
-        with:
-          images: ghcr.io/${{ github.repository_owner }}/tarkov-vision-proxy
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=semver,pattern={{major}}
-            type=ref,event=branch
-            type=sha,prefix=sha-
-          labels: |
-            org.opencontainers.image.title=Tarkov Vision Proxy
-            org.opencontainers.image.description=Gemini vision proxy for screenshot weapon detection
-            org.opencontainers.image.source=https://github.com/${{ github.repository }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: ./vision-proxy
-          platforms: linux/amd64,linux/arm64
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: Inspect image
+        run: |
+          docker buildx imagetools inspect ghcr.io/${{ github.repository_owner }}/${{ matrix.image }}:${{ steps.meta.outputs.version }}
