@@ -943,6 +943,10 @@ function AppContent({
               onExplore={handleExplore}
               disabled={!selectedGunId}
               weaponId={selectedGunId ?? undefined}
+              lockedIds={includedModIds}
+              excludedIds={excludedModIds}
+              onToggleLock={toggleLock}
+              onToggleExclude={toggleExclude}
             />
           }
         />

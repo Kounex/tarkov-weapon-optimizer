@@ -22,6 +22,20 @@ interface ExploreResultProps {
   onExplore: () => void
   disabled: boolean
   weaponId?: string
+  /**
+   * Lock/exclude wiring for the build-detail modal. These are the SAME
+   * App-level include/exclude lists the Optimize tab uses (shared state,
+   * visible in both tabs' ModFilter panel). Mirroring the Optimize UX,
+   * toggling only updates the constraint lists — it never auto-re-runs:
+   * the user re-runs "Run Analysis" to get the updated frontier (a whole
+   * Pareto run is ~10 solves, so even if Optimize auto-resolved single
+   * solves — it doesn't — auto-re-running a frontier per toggle would be
+   * the wrong adaptation).
+   */
+  lockedIds?: string[]
+  excludedIds?: string[]
+  onToggleLock?: (id: string) => void
+  onToggleExclude?: (id: string) => void
 }
 
 function precisionResolvedLabel(t: (k: string, opts?: Record<string, string>) => string, mode: 'fast' | 'precise'): string {
@@ -30,7 +44,7 @@ function precisionResolvedLabel(t: (k: string, opts?: Record<string, string>) =>
 
 const EFTFORGE_URL = 'https://www.eftforge.com'
 
-export function ExploreResult({ exploreResult, solveTime, explorePrecision, resultTradeoff, exploring, onExplore, disabled, weaponId }: ExploreResultProps) {
+export function ExploreResult({ exploreResult, solveTime, explorePrecision, resultTradeoff, exploring, onExplore, disabled, weaponId, lockedIds, excludedIds, onToggleLock, onToggleExclude }: ExploreResultProps) {
   const { t } = useTranslation()
   const { token } = useToken()
   const [detailPoint, setDetailPoint] = useState<ExplorePoint | null>(null)
@@ -161,6 +175,10 @@ export function ExploreResult({ exploreResult, solveTime, explorePrecision, resu
               viewMode={detailViewMode}
               onViewModeChange={setDetailViewMode}
               weaponId={weaponId}
+              lockedIds={lockedIds}
+              excludedIds={excludedIds}
+              onToggleLock={onToggleLock}
+              onToggleExclude={onToggleExclude}
             />
           </div>
         )}

@@ -2,6 +2,11 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.6.6] — 2026-07-29
+
+### Added
+- **Lock / ban mods from the Explore build-detail modal.** The modal's build manifest (Detailed/Compact/Table views) now has the same lock (must-include) and ban (never-use) row actions as the Optimize tab. Toggles update the shared include/exclude constraints immediately and rows show their locked/banned state; constraints take effect on the next manually triggered explore run (no auto-re-run of the whole Pareto frontier). Optimize and Explore share one include/exclude state, so constraints set in either tab apply to both.
+
 ## [v2.6.5] — 2026-07-28
 
 ### Added
