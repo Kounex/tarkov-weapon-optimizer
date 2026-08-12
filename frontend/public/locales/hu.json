@@ -201,7 +201,8 @@
     "refresh_data": "Adatok frissítésének kényszerítése",
     "refresh_data_tooltip": "Gyorsítótárazott játékadatok törlése és újraletöltése a Tarkov.dev-ről",
     "quest_badge_label": "Küldetéshez kötött",
-    "quest_badge_tooltip": "Csak a(z) „{{quest}}\" küldetés teljesítése után vásárolható meg — kösd össze a TarkovTracker fiókodat az ellenőrzéshez, vagy tiltsd le ezt a tárgyat, ha még nincs meg a küldetés."
+    "quest_badge_tooltip": "Csak a(z) „{{quest}}\" küldetés teljesítése után vásárolható meg — kösd össze a TarkovTracker fiókodat az ellenőrzéshez, vagy tiltsd le ezt a tárgyat, ha még nincs meg a küldetés.",
+    "ban_base_action_tooltip_add": "Ez az alap tiltása (soha nem választja automatikusan)"
   },
   "error": {
     "title": "Hiba történt",

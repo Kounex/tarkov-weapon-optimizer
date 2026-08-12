@@ -84,6 +84,8 @@ export function OptimizeResult({ result, viewMode, onViewModeChange, optimizing,
               retainedItems={result.selected_items.filter(i => result.selected_preset!.items.includes(i.id))}
               compactMode={viewMode === 'compact' || viewMode === 'table'}
               viewMode={viewMode}
+              excludedIds={excludedIds}
+              onToggleExclude={onToggleExclude}
             />
           )}
           <BuildManifest result={result} viewMode={viewMode} onViewModeChange={onViewModeChange} onCopy={onCopy} weaponId={weaponId} lockedIds={lockedIds} excludedIds={excludedIds} onToggleLock={onToggleLock} onToggleExclude={onToggleExclude} />

@@ -201,7 +201,8 @@
     "refresh_data": "Vynutit obnovení dat",
     "refresh_data_tooltip": "Vymazat mezipaměť a znovu stáhnout data z Tarkov.dev",
     "quest_badge_label": "Zamčeno questem",
-    "quest_badge_tooltip": "Lze koupit až po dokončení questu „{{quest}}\" — propojte účet TarkovTracker pro ověření, nebo tuto položku zabanujte, pokud quest ještě nemáte."
+    "quest_badge_tooltip": "Lze koupit až po dokončení questu „{{quest}}\" — propojte účet TarkovTracker pro ověření, nebo tuto položku zabanujte, pokud quest ještě nemáte.",
+    "ban_base_action_tooltip_add": "Zabanovat tento základ (nikdy se nevybere automaticky)"
   },
   "error": {
     "title": "Došlo k chybě",

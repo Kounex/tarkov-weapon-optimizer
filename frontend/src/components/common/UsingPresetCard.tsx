@@ -1,9 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { Card, Tag, Typography, message, Grid, Tooltip, Collapse, Space, Table } from 'antd'
+import { Card, Tag, Typography, message, Grid, Tooltip, Collapse, Space, Table, Button, theme } from 'antd'
+import { StopOutlined } from '@ant-design/icons'
 import { TraderIcon, ItemRow, ItemTooltip, FleaBadges, QuestBadge } from '../ItemRow'
 import type { OptimizeResponse, ItemDetail } from '../../api/client'
 
 const { Text } = Typography
+const { useToken } = theme
 
 type Preset = NonNullable<OptimizeResponse['selected_preset']>
 
@@ -22,10 +24,13 @@ interface UsingPresetCardProps {
   retainedItems?: ItemDetail[]
   compactMode?: boolean
   viewMode?: 'detailed' | 'compact' | 'table'
+  excludedIds?: string[]
+  onToggleExclude?: (id: string) => void
 }
 
-export function UsingPresetCard({ preset, retainedItems, compactMode, viewMode }: UsingPresetCardProps) {
+export function UsingPresetCard({ preset, retainedItems, compactMode, viewMode, excludedIds, onToggleExclude }: UsingPresetCardProps) {
   const { t } = useTranslation()
+  const { token } = useToken()
   const screens = Grid.useBreakpoint()
   const isMobile = !screens.md
   const [messageApi, contextHolder] = message.useMessage()
@@ -47,10 +52,23 @@ export function UsingPresetCard({ preset, retainedItems, compactMode, viewMode }
   }
   const unknown = t('ui.unknown')
   const tooltipContent = <PresetTooltipContent preset={preset} />
+  const isExcluded = excludedIds?.includes(preset.id) ?? false
   return (
     <Card size="small" style={{ overflow: 'hidden' }}>
       {contextHolder}
       <div style={{ display: 'flex', gap: isMobile ? 10 : 14, alignItems: 'center', flexWrap: 'wrap' }}>
+        {onToggleExclude && (
+          <Tooltip title={isExcluded ? t('ui.ban_action_tooltip_remove') : t('ui.ban_base_action_tooltip_add')}>
+            <Button
+              type={isExcluded ? 'primary' : 'text'}
+              danger={isExcluded}
+              size="small"
+              icon={<StopOutlined />}
+              onClick={() => onToggleExclude(preset.id)}
+              style={{ flexShrink: 0, ...(isExcluded ? {} : { color: token.colorTextSecondary }) }}
+            />
+          </Tooltip>
+        )}
         {preset.icon && (
           <Tooltip title={tooltipContent} overlayStyle={{ maxWidth: 340 }}>
             <img

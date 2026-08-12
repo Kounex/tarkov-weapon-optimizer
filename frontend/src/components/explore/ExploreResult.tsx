@@ -160,6 +160,8 @@ export function ExploreResult({ exploreResult, solveTime, explorePrecision, resu
                 retainedItems={detailPoint.selected_items.filter(i => detailPoint.selected_preset!.items.includes(i.id))}
                 compactMode={detailViewMode === 'compact' || detailViewMode === 'table'}
                 viewMode={detailViewMode}
+                excludedIds={excludedIds}
+                onToggleExclude={onToggleExclude}
               />
             )}
             <BuildManifest

@@ -201,7 +201,8 @@
     "refresh_data": "Verileri güncelle",
     "refresh_data_tooltip": "Oyun verisi önbelleğini temizle ve Tarkov.dev'den yeniden indir",
     "quest_badge_label": "Görevle kilitli",
-    "quest_badge_tooltip": "Yalnızca \"{{quest}}\" görevi tamamlandıktan sonra satın alınabilir — doğrulamak için TarkovTracker hesabınızı bağlayın veya henüz tamamlamadıysanız bu eşyayı yasaklayın."
+    "quest_badge_tooltip": "Yalnızca \"{{quest}}\" görevi tamamlandıktan sonra satın alınabilir — doğrulamak için TarkovTracker hesabınızı bağlayın veya henüz tamamlamadıysanız bu eşyayı yasaklayın.",
+    "ban_base_action_tooltip_add": "Bu tabanı yasakla (asla otomatik seçilmez)"
   },
   "error": {
     "title": "Bir hata oluştu",

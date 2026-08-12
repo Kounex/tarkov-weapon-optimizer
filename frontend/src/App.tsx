@@ -476,6 +476,7 @@ function AppContent({
       exclude_scarce: excludeScarce,
       player_level: playerLevel,
       completed_task_ids: completedTaskIds ?? undefined,
+      exclude_items: excludedModIds.length > 0 ? excludedModIds : undefined,
     }, gameMode, i18n.language || 'en')
       .then(data => {
         if (seq !== presetRequestSeq.current) return
@@ -491,7 +492,7 @@ function AppContent({
         if (seq !== presetRequestSeq.current) return
         setLoadingPresets(false)
       })
-  }, [selectedGunId, gameMode, i18n.language, traderLevels, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, playerLevel, completedTaskIds])
+  }, [selectedGunId, gameMode, i18n.language, traderLevels, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, playerLevel, completedTaskIds, excludedModIds])
 
   const categories = useMemo(() => {
     const filtered = selectedCaliber === 'All' ? guns : guns.filter(g => g.caliber === selectedCaliber)

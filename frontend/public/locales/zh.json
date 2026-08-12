@@ -201,7 +201,8 @@
     "refresh_data": "强制更新数据",
     "refresh_data_tooltip": "清空缓存并从 Tarkov.dev 重新下载游戏数据",
     "quest_badge_label": "任务解锁",
-    "quest_badge_tooltip": "需完成任务「{{quest}}」才能购买 — 关联 TarkovTracker 账号以验证，若尚未完成可将此物品禁用。"
+    "quest_badge_tooltip": "需完成任务「{{quest}}」才能购买 — 关联 TarkovTracker 账号以验证，若尚未完成可将此物品禁用。",
+    "ban_base_action_tooltip_add": "禁用此基础件（不会被自动选用）"
   },
   "trader": {
     "prapor": "Prapor",

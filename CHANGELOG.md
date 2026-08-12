@@ -2,6 +2,11 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.7.3] — 2026-08-13
+
+### Added
+- **Ban a base preset or the naked/stock receiver from being used at all.** The build result's base-preset card now has the same ban action mods already have (`UsingPresetCard`), so a base you don't actually have access to — quest-locked or otherwise — can be permanently excluded rather than just flagged. Reuses the exact same ban list as mods: banning a base's ID (the preset's own item ID, or the weapon's own ID for the naked receiver) removes it from auto-selection (`lpBuilder.ts`) and from the manual "Base preset" dropdown (`getWeaponPresets`) alike. A banned-but-forced base falls back to auto selection with the existing "base unavailable" warning, same as any other unpurchasable forced base. i18n in all 16 locales.
+
 ## [v2.7.2] — 2026-08-13
 
 ### Fixed

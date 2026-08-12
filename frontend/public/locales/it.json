@@ -201,7 +201,8 @@
     "refresh_data": "Forza aggiornamento dati",
     "refresh_data_tooltip": "Cancella cache e scarica nuovamente i dati da Tarkov.dev",
     "quest_badge_label": "Bloccato da missione",
-    "quest_badge_tooltip": "Acquistabile solo dopo aver completato la missione «{{quest}}» — collega il tuo account TarkovTracker per verificare, oppure escludi questo oggetto se non l'hai ancora completata."
+    "quest_badge_tooltip": "Acquistabile solo dopo aver completato la missione «{{quest}}» — collega il tuo account TarkovTracker per verificare, oppure escludi questo oggetto se non l'hai ancora completata.",
+    "ban_base_action_tooltip_add": "Escludi questa base (mai selezionata automaticamente)"
   },
   "error": {
     "title": "Si è verificato un errore",

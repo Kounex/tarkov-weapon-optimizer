@@ -350,6 +350,8 @@ export interface BaseAvailabilitySettings {
   player_level?: number;
   /** See OptimizeRequest.completed_task_ids. */
   completed_task_ids?: string[];
+  /** Banned base IDs (preset id or the weapon's own id for the naked base) — never auto- or manually-selectable. */
+  exclude_items?: string[];
 }
 
 export const getWeaponPresets = async (

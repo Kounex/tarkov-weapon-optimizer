@@ -201,7 +201,8 @@
     "refresh_data": "Forcer l'actualisation des données",
     "refresh_data_tooltip": "Vider le cache et télécharger à nouveau les données depuis Tarkov.dev",
     "quest_badge_label": "Verrouillé par quête",
-    "quest_badge_tooltip": "Achetable seulement après la quête « {{quest}} » — liez votre compte TarkovTracker pour vérifier, ou bannissez cet objet si vous ne l'avez pas encore."
+    "quest_badge_tooltip": "Achetable seulement après la quête « {{quest}} » — liez votre compte TarkovTracker pour vérifier, ou bannissez cet objet si vous ne l'avez pas encore.",
+    "ban_base_action_tooltip_add": "Bannir cette base (jamais sélectionnée automatiquement)"
   },
   "error": {
     "title": "Une erreur s'est produite",

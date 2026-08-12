@@ -63,6 +63,7 @@ interface WorkerMessage {
       exclude_scarce?: boolean;
       player_level?: number;
       completed_task_ids?: string[];
+      exclude_items?: string[];
     };
   };
 }
@@ -149,7 +150,11 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
           // mirroring the LP's per-preset getAvailablePrice check.
           const av = payload.availability ?? {};
           const completedTasksForPresets = av.completed_task_ids ? new Set(av.completed_task_ids) : null;
+          // Banned bases (same excludedModIds/"ban" mechanism as mods) never
+          // show up as auto- or manually-selectable base options.
+          const excludedBaseIds = new Set(av.exclude_items ?? []);
           const presets = weapon.presets
+            .filter(p => !excludedBaseIds.has(p.id))
             .map(p => {
               const [price, source, avail, label] = getAvailablePrice(
                 p,
@@ -176,7 +181,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             av.exclude_scarce ?? false,
             completedTasksForPresets,
           );
-          const nakedPurchasable = nakedAvail && nakedPrice > 0 && nakedPrice < 100_000_000;
+          const nakedPurchasable = nakedAvail && nakedPrice > 0 && nakedPrice < 100_000_000 && !excludedBaseIds.has(weaponId);
           self.postMessage({
             type: 'result',
             id,

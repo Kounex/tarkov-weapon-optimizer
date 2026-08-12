@@ -201,7 +201,8 @@
     "refresh_data": "Daten neu laden",
     "refresh_data_tooltip": "Zwischengespeicherte Spieldaten löschen und von Tarkov.dev neu abrufen",
     "quest_badge_label": "Quest-gesperrt",
-    "quest_badge_tooltip": "Nur käuflich nach Abschluss der Quest „{{quest}}\" — verknüpfe dein TarkovTracker-Konto zur Bestätigung oder verbanne diesen Gegenstand, falls du die Quest noch nicht hast."
+    "quest_badge_tooltip": "Nur käuflich nach Abschluss der Quest „{{quest}}\" — verknüpfe dein TarkovTracker-Konto zur Bestätigung oder verbanne diesen Gegenstand, falls du die Quest noch nicht hast.",
+    "ban_base_action_tooltip_add": "Diese Basis verbannen (wird nie automatisch gewählt)"
   },
   "error": {
     "title": "Ein Fehler ist aufgetreten",

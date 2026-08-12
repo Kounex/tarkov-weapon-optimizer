@@ -201,7 +201,8 @@
     "refresh_data": "Wymuś odświeżenie danych",
     "refresh_data_tooltip": "Wyczyść pamięć podręczną danych gry i pobierz ponownie z Tarkov.dev",
     "quest_badge_label": "Zablokowane zadaniem",
-    "quest_badge_tooltip": "Dostępne dopiero po ukończeniu zadania „{{quest}}\" — połącz konto TarkovTracker, aby to zweryfikować, albo zbanuj ten przedmiot, jeśli jeszcze go nie masz."
+    "quest_badge_tooltip": "Dostępne dopiero po ukończeniu zadania „{{quest}}\" — połącz konto TarkovTracker, aby to zweryfikować, albo zbanuj ten przedmiot, jeśli jeszcze go nie masz.",
+    "ban_base_action_tooltip_add": "Zbanuj tę bazę (nigdy nie zostanie wybrana automatycznie)"
   },
   "error": {
     "title": "Wystąpił błąd",

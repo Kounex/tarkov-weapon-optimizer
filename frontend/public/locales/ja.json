@@ -201,7 +201,8 @@
     "refresh_data": "データの強制更新",
     "refresh_data_tooltip": "キャッシュをクリアし、Tarkov.devからゲームデータを再取得",
     "quest_badge_label": "クエスト制限",
-    "quest_badge_tooltip": "クエスト「{{quest}}」を完了しないと購入できません — TarkovTracker アカウントを連携して確認するか、未完了ならこのアイテムを禁止してください。"
+    "quest_badge_tooltip": "クエスト「{{quest}}」を完了しないと購入できません — TarkovTracker アカウントを連携して確認するか、未完了ならこのアイテムを禁止してください。",
+    "ban_base_action_tooltip_add": "このベースを禁止（自動選択されなくなります）"
   },
   "error": {
     "title": "エラーが発生しました",

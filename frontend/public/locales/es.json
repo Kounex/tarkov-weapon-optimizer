@@ -201,7 +201,8 @@
     "refresh_data": "Forzar recarga de datos",
     "refresh_data_tooltip": "Limpiar datos de juego en caché y re-descargar desde Tarkov.dev",
     "quest_badge_label": "Bloqueado por misión",
-    "quest_badge_tooltip": "Solo se puede comprar tras completar la misión «{{quest}}» — vincula tu cuenta de TarkovTracker para verificarlo, o excluye este objeto si aún no la has completado."
+    "quest_badge_tooltip": "Solo se puede comprar tras completar la misión «{{quest}}» — vincula tu cuenta de TarkovTracker para verificarlo, o excluye este objeto si aún no la has completado.",
+    "ban_base_action_tooltip_add": "Excluir esta base (nunca se selecciona automáticamente)"
   },
   "error": {
     "title": "Ocurrió un error",

@@ -201,7 +201,8 @@
     "ban_action_tooltip_remove": "Unban (remove from excluded)",
     "changelog_title": "Changelog",
     "quest_badge_label": "Quest-locked",
-    "quest_badge_tooltip": "Only sellable after completing the quest \"{{quest}}\" — link your TarkovTracker account to verify, or ban this item if you don’t have it yet."
+    "quest_badge_tooltip": "Only sellable after completing the quest \"{{quest}}\" — link your TarkovTracker account to verify, or ban this item if you don’t have it yet.",
+    "ban_base_action_tooltip_add": "Ban this base (never auto-selected)"
   },
   "trader": {
     "prapor": "Prapor",

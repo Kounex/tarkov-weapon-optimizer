@@ -201,7 +201,8 @@
     "refresh_data": "데이터 강제 새로고침",
     "refresh_data_tooltip": "캐시된 게임 데이터를 지우고 Tarkov.dev에서 다시 가져오기",
     "quest_badge_label": "퀘스트 잠김",
-    "quest_badge_tooltip": "퀘스트 \"{{quest}}\"를 완료해야 구매할 수 있습니다 — TarkovTracker 계정을 연동해 확인하거나, 아직 완료하지 않았다면 이 아이템을 제외하세요."
+    "quest_badge_tooltip": "퀘스트 \"{{quest}}\"를 완료해야 구매할 수 있습니다 — TarkovTracker 계정을 연동해 확인하거나, 아직 완료하지 않았다면 이 아이템을 제외하세요.",
+    "ban_base_action_tooltip_add": "이 베이스 금지 (자동 선택되지 않음)"
   },
   "error": {
     "title": "오류가 발생했습니다",

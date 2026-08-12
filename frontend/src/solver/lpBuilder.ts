@@ -154,11 +154,14 @@ export function buildLP(params: SolveParams): LPResult {
     params.completedTasks ?? null,
   );
   const nakedGunPriceRaw = nakedGunPriceAvail;
-  const nakedGunPurchasable = nakedGunPurchasableAvail && nakedGunPriceRaw > 0 && nakedGunPriceRaw < 100_000_000;
+  // Same excludeItemSet as mods — the naked base is banned via its own
+  // weapon ID, matching the ID solver.ts already puts on its PresetDetail.
+  const nakedGunPurchasable = nakedGunPurchasableAvail && nakedGunPriceRaw > 0 && nakedGunPriceRaw < 100_000_000 && !excludeItemSet.has(weaponId);
 
   // Availability of every purchasable preset at current settings.
   const presetAvail: Array<{ preset: PresetInfo; price: number }> = [];
   for (const preset of presets) {
+    if (excludeItemSet.has(preset.id)) continue; // banned base — never an auto-selection candidate
     const [pPrice, , pAvail] = getAvailablePrice(
       preset,
       params.traderLevels ?? undefined,
