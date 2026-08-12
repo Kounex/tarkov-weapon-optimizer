@@ -61,6 +61,8 @@ export interface GunStats {
   recoil_dispersion: number;
   price: number;
   price_source: string;
+  offers: OfferInfo[];
+  min_level_flea: number;
 }
 
 // --- Mod Stats ---

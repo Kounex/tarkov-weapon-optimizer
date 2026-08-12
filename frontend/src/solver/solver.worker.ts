@@ -166,15 +166,25 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             .filter(p => p.available)
             .map(({ id, name, image, price, source, label }) => ({ id, name, image, price, source, label }));
           const wStats = weapon.stats;
-          const nakedPurchasable = wStats.price > 0 && wStats.price < 100_000_000;
+          const [nakedPrice, nakedSource, nakedAvail] = getAvailablePrice(
+            wStats,
+            (av.trader_levels as TraderLevels | undefined) ?? undefined,
+            av.flea_available ?? true,
+            av.player_level ?? null,
+            av.barter_available ?? false,
+            av.barter_exclude_dogtags ?? false,
+            av.exclude_scarce ?? false,
+            completedTasksForPresets,
+          );
+          const nakedPurchasable = nakedAvail && nakedPrice > 0 && nakedPrice < 100_000_000;
           self.postMessage({
             type: 'result',
             id,
             payload: {
               presets,
               naked: {
-                price: nakedPurchasable ? wStats.price : 0,
-                source: nakedPurchasable ? wStats.price_source : null,
+                price: nakedPurchasable ? nakedPrice : 0,
+                source: nakedPurchasable ? nakedSource : null,
                 available: nakedPurchasable,
               },
             },

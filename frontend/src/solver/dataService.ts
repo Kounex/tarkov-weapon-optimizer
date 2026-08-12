@@ -15,7 +15,7 @@ import { DEFAULT_TRADER_LEVELS } from './types.ts';
 import { fetchFromJsonApi } from './jsonApiAdapter.ts';
 
 const API_URL = 'https://api.tarkov.dev/graphql';
-const CACHE_VERSION = 17;
+const CACHE_VERSION = 18;
 const CACHE_TTL_MS = 3600 * 1000; // 1 hour
 const DB_NAME = 'tarkov-optimizer-cache';
 const DB_VERSION = 1;
@@ -34,6 +34,7 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
     lastOfferCount
     updated
     types
+    minLevelForFlea
     buyFor {
       currency
       priceRUB
@@ -595,28 +596,57 @@ function extractAllPresets(gun: RawItem, includeUnpurchasable = false): PresetIn
 function extractGunStats(gun: RawItem): GunStats {
   const props = gun.properties ?? {};
   const buyFor = gun.buyFor ?? [];
-  let lowestPrice = 0;
-  let priceSource = 'basePrice';
+  const offers: OfferInfo[] = [];
 
-  if (buyFor.length) {
-    const traderOffers = buyFor.filter(
-      (offer: RawItem) => typeof offer === 'object' && offer?.source !== 'fleaMarket'
-    );
-    if (traderOffers.length) {
-      const minOffer = traderOffers.reduce((min: RawItem, o: RawItem) =>
-        (o.priceRUB ?? Infinity) < (min.priceRUB ?? Infinity) ? o : min
-        , traderOffers[0]);
-      lowestPrice = minOffer.priceRUB ?? 0;
-      priceSource = minOffer.source ?? 'market';
+  // Same per-offer shape as extractModStats/extractAllPresets — trader
+  // offers (with task_unlock), a flea offer via fleaMarketSignals, and
+  // barters — so the naked gun's availability goes through the identical
+  // getAvailablePrice() filtering (trader level, flea toggle, quest-lock
+  // confirmation) instead of the old raw-buyFor-minimum that ignored all
+  // of those settings and hardcoded flea out entirely.
+  for (const offer of buyFor) {
+    if (typeof offer !== 'object' || !offer) continue;
+    const source = offer.source ?? '';
+    let price = offer.priceRUB ?? 0;
+    let fleaExtras: Partial<OfferInfo> | null = null;
+    if (source === 'fleaMarket') {
+      const flea = fleaMarketSignals(gun, price);
+      if (flea.price === null) continue;
+      price = flea.price;
+      fleaExtras = fleaOfferExtras(gun, flea.unstable);
     }
+    if (price <= 0) continue;
+    const vendor = offer.vendor ?? {};
+    let traderLevel: number | null = null;
+    let taskUnlock: RawItem | null = null;
+    if (source === 'fleaMarket') {
+      traderLevel = null;
+    } else {
+      traderLevel = vendor.minTraderLevel ?? 1;
+      taskUnlock = vendor.taskUnlock ?? null;
+    }
+    offers.push({
+      price,
+      source,
+      vendor_name: vendor.name ?? '',
+      vendor_normalized: vendor.normalizedName ?? '',
+      trader_level: traderLevel,
+      task_unlock: taskUnlock?.id ?? null,
+      task_unlock_name: taskUnlock?.name ?? undefined,
+      ...(fleaExtras ?? {}),
+    });
   }
+  const bartersFor = gun.bartersFor ?? [];
+  if (Array.isArray(bartersFor)) {
+    offers.push(...extractBarterOffers(bartersFor));
+  }
+  offers.sort((a, b) => a.price - b.price);
 
-  if (lowestPrice === 0) {
-    // No direct trader offers for naked gun — mark as not purchasable.
-    // Matches Python extract_gun_stats: naked gun is only purchasable via
-    // direct trader offers; flea-only guns must use preset bases instead.
-    lowestPrice = 999999999;
-    priceSource = 'not_available';
+  let lowestPrice = 999999999;
+  let priceSource = 'not_available';
+  if (offers.length) {
+    lowestPrice = offers[0].price;
+    priceSource = offers[0].source;
   }
 
   const defaultPreset = props.defaultPreset ?? {};
@@ -653,6 +683,8 @@ function extractGunStats(gun: RawItem): GunStats {
     recoil_dispersion: props.recoilDispersion ?? 0,
     price: lowestPrice,
     price_source: priceSource,
+    offers,
+    min_level_flea: gun.minLevelForFlea ?? 0,
   };
 }
 

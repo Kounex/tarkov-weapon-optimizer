@@ -239,7 +239,25 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
     };
 
     if (selectedBaseId === 'naked') {
-      basePrice = wStats.price < 100_000_000 ? wStats.price : 0;
+      const [filteredPrice, src, , purchaseLabel] = getAvailablePrice(wStats, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags, excludeScarce, completedTasks);
+      basePrice = filteredPrice;
+      let source = src ?? undefined;
+      let label = purchaseLabel ?? undefined;
+      if (!source && wStats.price_source && wStats.price_source !== 'not_available') {
+        source = wStats.price_source;
+      }
+      if (!label && source === 'fleaMarket') {
+        label = 'Flea Market';
+      }
+      let nakedBarterReqs: Array<{ name: string; count: number; unit_price: number }> | undefined;
+      if (source?.startsWith('barter:') && wStats.offers) {
+        const offer = wStats.offers.find(o => o.source === source);
+        if (offer?.barter_requirements) nakedBarterReqs = offer.barter_requirements;
+      }
+      const nakedFleaOffer = source === 'fleaMarket'
+        ? wStats.offers?.find(o => o.source === 'fleaMarket')
+        : undefined;
+      const nakedChosenOffer = wStats.offers?.find(o => o.source === source);
       const gunData = weapon.data as Record<string, unknown>;
       presetDetail = {
         id: params.weaponId,
@@ -248,7 +266,13 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
         items: [],
         icon: (gunData.iconLink ?? gunData.iconLinkFallback ?? wStats.default_preset_image) as string | undefined,
         image_large: (gunData.image512pxLink ?? gunData.imageLink ?? gunData.image8xLink) as string | undefined,
-        source: wStats.price_source !== 'not_available' ? wStats.price_source : undefined,
+        source,
+        purchase_label: label,
+        barter_requirements: nakedBarterReqs,
+        ...(nakedFleaOffer ? fleaBadgeFlags(nakedFleaOffer) : {}),
+        ...(nakedChosenOffer?.task_unlock
+          ? { task_unlock_name: nakedChosenOffer.task_unlock_name ?? nakedChosenOffer.task_unlock, task_locked_status: taskLockedStatus }
+          : {}),
         ...weaponTooltip,
       };
     } else if (selectedBaseId) {

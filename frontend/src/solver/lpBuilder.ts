@@ -139,8 +139,22 @@ export function buildLP(params: SolveParams): LPResult {
 
   // Naked-gun purchasability is needed early for the forced-base decision
   // (mirrors §4: naked gun is a base option only when directly purchasable).
-  const nakedGunPriceRaw = weaponStats.price ?? 0;
-  const nakedGunPurchasable = nakedGunPriceRaw > 0 && nakedGunPriceRaw < 100_000_000;
+  // Goes through getAvailablePrice like mods/presets — trader level, flea
+  // toggle, and quest-lock confirmation all apply (previously this read
+  // weaponStats.price directly, which ignored every one of those settings
+  // and hardcoded flea out of consideration entirely).
+  const [nakedGunPriceAvail, , nakedGunPurchasableAvail] = getAvailablePrice(
+    weaponStats,
+    params.traderLevels ?? undefined,
+    params.fleaAvailable ?? true,
+    params.playerLevel ?? null,
+    params.barterAvailable ?? false,
+    params.barterExcludeDogtags ?? false,
+    params.excludeScarce ?? false,
+    params.completedTasks ?? null,
+  );
+  const nakedGunPriceRaw = nakedGunPriceAvail;
+  const nakedGunPurchasable = nakedGunPurchasableAvail && nakedGunPriceRaw > 0 && nakedGunPriceRaw < 100_000_000;
 
   // Availability of every purchasable preset at current settings.
   const presetAvail: Array<{ preset: PresetInfo; price: number }> = [];

@@ -2,6 +2,12 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.7.2] — 2026-08-13
+
+### Fixed
+- **Stale cached game data kept showing the v2.7.1 quest-name bug after the fix shipped.** The v2.7.1 fix changed what's stored inside the cached game-data blob (resolved quest names) without bumping `CACHE_VERSION`, so browsers with data already cached (1h TTL) kept serving the pre-fix names until the cache expired or "force refresh data" was used. `CACHE_VERSION` 17 → 18 invalidates every existing cache immediately.
+- **The naked/stock gun base never went through the same availability filtering as mods and presets.** `extractGunStats` computed its price from the raw `buyFor` minimum, ignoring trader-level settings entirely, hardcoding flea market out of consideration ("naked gun is only purchasable via direct trader offers" — a deliberate but overly narrow carryover from the original Python CP-SAT model), and having no concept of quest-gated offers at all. It's now built the same per-offer way as mods/presets (trader offers incl. `taskUnlock`, a flea offer, barters) and resolved through `getAvailablePrice`, so: trader-level settings are finally respected for the naked base, flea is a valid fallback source when enabled and cheaper/available, quest-locked naked-gun offers get the same "Quest-locked" badge (and only get excluded once a linked TarkovTracker account confirms the quest isn't done) as mods and presets already did.
+
 ## [v2.7.1] — 2026-08-13
 
 ### Fixed
