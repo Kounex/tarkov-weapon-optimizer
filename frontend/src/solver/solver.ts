@@ -180,6 +180,10 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
     const barterAvailable = params.barterAvailable ?? false;
     const barterExcludeDogtags = params.barterExcludeDogtags ?? false;
     const excludeScarce = params.excludeScarce ?? false;
+    const completedTasks = params.completedTasks ?? null;
+    // Whether a quest-gated offer's completion is confirmed via a linked
+    // TarkovTracker account, or just shown unverified — see QuestBadge.
+    const taskLockedStatus: 'unverified' | 'verified' = completedTasks ? 'verified' : 'unverified';
 
     let buyPrice = 0;
     for (let i = 1; i <= lp.nItems; i++) {
@@ -194,7 +198,7 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
       if (!detail) continue;
 
       if (isBought) {
-        const [price, src] = getAvailablePrice(entry.stats, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags, excludeScarce);
+        const [price, src] = getAvailablePrice(entry.stats, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags, excludeScarce, completedTasks);
         buyPrice += price;
         detail.source = src ?? undefined;
         detail.price = price;
@@ -207,6 +211,11 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
           if (offer?.barter_requirements) {
             detail.barter_requirements = offer.barter_requirements;
           }
+        }
+        const chosenOffer = entry.stats.offers?.find(o => o.source === src);
+        if (chosenOffer?.task_unlock) {
+          detail.task_unlock_name = chosenOffer.task_unlock_name ?? chosenOffer.task_unlock;
+          detail.task_locked_status = taskLockedStatus;
         }
       } else if (!entry.stats.purchasable) {
         // FiR / unpurchasable item — show as such
@@ -246,7 +255,7 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
       const preset = (weapon.presets || []).find(p => p.id === selectedBaseId)
         || (weapon.all_presets || []).find(p => p.id === selectedBaseId);
       if (preset) {
-        const [filteredPrice, src, , purchaseLabel] = getAvailablePrice(preset, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags, excludeScarce);
+        const [filteredPrice, src, , purchaseLabel] = getAvailablePrice(preset, traderLevels, fleaAvailable, playerLevel, barterAvailable, barterExcludeDogtags, excludeScarce, completedTasks);
         basePrice = filteredPrice;
         let source = src ?? undefined;
         let label = purchaseLabel ?? undefined;
@@ -264,6 +273,7 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
         const presetFleaOffer = source === 'fleaMarket'
           ? preset.offers?.find(o => o.source === 'fleaMarket')
           : undefined;
+        const presetChosenOffer = preset.offers?.find(o => o.source === source);
         presetDetail = {
           id: preset.id,
           name: preset.name,
@@ -275,6 +285,9 @@ export async function solve(params: SolveParams): Promise<OptimizeResponse> {
           purchase_label: label,
           barter_requirements: presetBarterReqs,
           parts_count: preset.items?.length || undefined,
+          ...(presetChosenOffer?.task_unlock
+            ? { task_unlock_name: presetChosenOffer.task_unlock_name ?? presetChosenOffer.task_unlock, task_locked_status: taskLockedStatus }
+            : {}),
           ...(presetFleaOffer ? fleaBadgeFlags(presetFleaOffer) : {}),
           ...weaponTooltip,
         };

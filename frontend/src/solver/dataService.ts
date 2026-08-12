@@ -44,6 +44,7 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
         ... on TraderOffer {
           minTraderLevel
           buyLimit
+          taskUnlock { id name }
         }
         ... on FleaMarket {
           foundInRaidRequired
@@ -128,6 +129,7 @@ query AllGuns($lang: LanguageCode, $gameMode: GameMode) {
               ... on TraderOffer {
                 minTraderLevel
                 buyLimit
+                taskUnlock { id name }
               }
               ... on FleaMarket {
                 foundInRaidRequired
@@ -196,6 +198,7 @@ query AllMods($lang: LanguageCode, $gameMode: GameMode) {
         ... on TraderOffer {
           minTraderLevel
           buyLimit
+          taskUnlock { id name }
         }
       }
     }
@@ -544,8 +547,10 @@ function extractAllPresets(gun: RawItem, includeUnpurchasable = false): PresetIn
       if (price <= 0) continue;
       const vendor = offer.vendor ?? {};
       let traderLevel: number | null = null;
+      let taskUnlock: RawItem | null = null;
       if (source !== 'fleaMarket') {
         traderLevel = vendor.minTraderLevel ?? 1;
+        taskUnlock = vendor.taskUnlock ?? null;
       }
       offers.push({
         price,
@@ -553,6 +558,8 @@ function extractAllPresets(gun: RawItem, includeUnpurchasable = false): PresetIn
         vendor_name: vendor.name ?? '',
         vendor_normalized: vendor.normalizedName ?? '',
         trader_level: traderLevel,
+        task_unlock: taskUnlock?.id ?? null,
+        task_unlock_name: taskUnlock?.name ?? undefined,
         ...(fleaExtras ?? {}),
       });
     }
@@ -739,10 +746,12 @@ function extractModStats(mod: RawItem): ModStats {
     if (price <= 0) continue;
     const vendor = offer.vendor ?? {};
     let traderLevel: number | null = null;
+    let taskUnlock: RawItem | null = null;
     if (source === 'fleaMarket') {
       traderLevel = null;
     } else {
       traderLevel = vendor.minTraderLevel ?? 1;
+      taskUnlock = vendor.taskUnlock ?? null;
     }
     offers.push({
       price,
@@ -750,6 +759,8 @@ function extractModStats(mod: RawItem): ModStats {
       vendor_name: vendor.name ?? '',
       vendor_normalized: vendor.normalizedName ?? '',
       trader_level: traderLevel,
+      task_unlock: taskUnlock?.id ?? null,
+      task_unlock_name: taskUnlock?.name ?? undefined,
       ...(fleaExtras ?? {}),
     });
   }
@@ -840,6 +851,14 @@ export function getAvailablePrice(
   barterAvailable = false,
   barterExcludeDogtags = false,
   excludeScarce = false,
+  /**
+   * Completed-task IDs from a linked TarkovTracker account, or null/undefined
+   * when unconfirmed. A quest-gated trader offer (offer.task_unlock) is only
+   * excluded when this is a confirmed Set that does NOT contain the task —
+   * unconfirmed never excludes, so the offer stays visible (flagged in the UI
+   * instead) until the user links an account proving the quest isn't done.
+   */
+  completedTasks: Set<string> | null | undefined = null,
 ): [number, string | null, boolean, string | null] {
   if (stats.purchasable === false) {
     return [0, 'not_purchasable', false, null];
@@ -882,6 +901,7 @@ export function getAvailablePrice(
     } else {
       const traderLevel = traderLevels[vendor] ?? 4;
       if (requiredLevel !== null && requiredLevel > traderLevel) continue;
+      if (offer.task_unlock && completedTasks && !completedTasks.has(offer.task_unlock)) continue;
     }
 
     if (bestPrice === null || price < bestPrice) {

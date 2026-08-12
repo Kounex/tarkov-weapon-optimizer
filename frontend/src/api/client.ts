@@ -51,6 +51,12 @@ export interface OptimizeRequest {
   /** Skip flea offers with <=3 active listings ("scarce") during price resolution. Default off. */
   exclude_scarce?: boolean;
   player_level?: number;
+  /**
+   * Completed-task IDs from a linked TarkovTracker account. Omitted/undefined
+   * means unconfirmed — quest-gated trader offers stay available (flagged in
+   * the UI) instead of being excluded. Only a confirmed absence excludes.
+   */
+  completed_task_ids?: string[];
   /** Boolean values are normalized: true → precise, false → fast. */
   precise_mode?: boolean | SolverPrecisionMode;
   /**
@@ -81,6 +87,10 @@ export interface ItemDetail {
   stale?: boolean;
   /** Flea purchases only: price deviates >2.5x from the 24h average */
   price_unstable?: boolean;
+  /** Display name of the quest gating the chosen trader offer, when it has one. */
+  task_unlock_name?: string;
+  /** 'verified' when a linked TarkovTracker account confirms the quest is done; 'unverified' otherwise. */
+  task_locked_status?: 'unverified' | 'verified';
   // Tooltip extras
   image_large?: string;
   accuracy_modifier?: number;
@@ -108,6 +118,10 @@ export interface PresetDetail {
   stale?: boolean;
   /** Flea purchases only: price deviates >2.5x from the 24h average */
   price_unstable?: boolean;
+  /** Display name of the quest gating the chosen preset offer, when it has one. */
+  task_unlock_name?: string;
+  /** 'verified' when a linked TarkovTracker account confirms the quest is done; 'unverified' otherwise. */
+  task_locked_status?: 'unverified' | 'verified';
   // Tooltip extras
   image_large?: string;
   caliber?: string;
@@ -334,6 +348,8 @@ export interface BaseAvailabilitySettings {
   /** Skip flea offers with <=3 active listings ("scarce") during price resolution. Default off. */
   exclude_scarce?: boolean;
   player_level?: number;
+  /** See OptimizeRequest.completed_task_ids. */
+  completed_task_ids?: string[];
 }
 
 export const getWeaponPresets = async (

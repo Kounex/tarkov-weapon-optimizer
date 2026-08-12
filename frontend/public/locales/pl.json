@@ -23,7 +23,15 @@
     "fast": "Szybki",
     "auto": "Auto",
     "precise": "Precyzyjny",
-    "solver_precision_tooltip": "Auto: Precyzyjny przy małym drzewie, Szybki przy dużym. Szybki: szybkie LP dla dużych drzew modów. Precyzyjny: pełne zmienne rozmieszczenia, wolniejszy ale dokładny dla modów wielu slotów."
+    "solver_precision_tooltip": "Auto: Precyzyjny przy małym drzewie, Szybki przy dużym. Szybki: szybkie LP dla dużych drzew modów. Precyzyjny: pełne zmienne rozmieszczenia, wolniejszy ale dokładny dla modów wielu slotów.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Połącz swoje konto TarkovTracker.org, aby weryfikować oferty handlarzy zablokowane zadaniami, zamiast tylko je oznaczać.",
+    "tarkovtracker_token_placeholder": "Token API (zalecany tylko do odczytu)",
+    "tarkovtracker_link": "Połącz",
+    "tarkovtracker_unlink": "Odłącz",
+    "tarkovtracker_linked_as": "Połączono jako {{name}}",
+    "tarkovtracker_error": "Połączenie nie powiodło się — sprawdź token",
+    "tarkovtracker_hint": "Utwórz token tylko do odczytu (GP) na"
   },
   "tabs": {
     "explore": "Analiza",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "Status solvera: {{status}}",
     "preset_base_fallback": "Wybrany preset bazowy jest niedostępny przy bieżących ustawieniach handlarzy/targowiska — solver wybrał bazę automatycznie.",
     "refresh_done": "Pamięć podręczna wyczyszczona, ponowne ładowanie…",
-    "refresh_failed": "Nie udało się wyczyścić pamięci podręcznej"
+    "refresh_failed": "Nie udało się wyczyścić pamięci podręcznej",
+    "tarkovtracker_linked": "Połączono z kontem TarkovTracker: {{name}}"
   },
   "ui": {
     "initializing": "Inicjalizacja...",
@@ -190,7 +199,9 @@
     "reset": "Przywróć domyślne",
     "ll_level": "LL {{level}}",
     "refresh_data": "Wymuś odświeżenie danych",
-    "refresh_data_tooltip": "Wyczyść pamięć podręczną danych gry i pobierz ponownie z Tarkov.dev"
+    "refresh_data_tooltip": "Wyczyść pamięć podręczną danych gry i pobierz ponownie z Tarkov.dev",
+    "quest_badge_label": "Zablokowane zadaniem",
+    "quest_badge_tooltip": "Dostępne dopiero po ukończeniu zadania „{{quest}}\" — połącz konto TarkovTracker, aby to zweryfikować, albo zbanuj ten przedmiot, jeśli jeszcze go nie masz."
   },
   "error": {
     "title": "Wystąpił błąd",

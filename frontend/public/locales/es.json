@@ -23,7 +23,15 @@
     "fast": "Rápido",
     "auto": "Auto",
     "precise": "Preciso",
-    "solver_precision_tooltip": "Auto: Preciso con árbol pequeño, Rápido con árbol grande. Rápido: LP rápido para árboles de mods grandes. Preciso: variables de colocación completas, más lento pero exacto en mods multi-ranura."
+    "solver_precision_tooltip": "Auto: Preciso con árbol pequeño, Rápido con árbol grande. Rápido: LP rápido para árboles de mods grandes. Preciso: variables de colocación completas, más lento pero exacto en mods multi-ranura.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Vincula tu cuenta de TarkovTracker.org para verificar las ofertas de comerciantes bloqueadas por misiones, en lugar de solo marcarlas.",
+    "tarkovtracker_token_placeholder": "Token de API (se recomienda solo lectura)",
+    "tarkovtracker_link": "Vincular",
+    "tarkovtracker_unlink": "Desvincular",
+    "tarkovtracker_linked_as": "Vinculado como {{name}}",
+    "tarkovtracker_error": "Error al vincular — revisa tu token",
+    "tarkovtracker_hint": "Crea un token de solo lectura (GP) en"
   },
   "tabs": {
     "explore": "Explorar",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "Estado del solucionador: {{status}}",
     "preset_base_fallback": "El preset base seleccionado no está disponible con la configuración actual de comerciantes/mercado de pulgas — el solucionador eligió la base automáticamente.",
     "refresh_done": "Caché limpiado, recargando…",
-    "refresh_failed": "No se pudo limpiar la caché"
+    "refresh_failed": "No se pudo limpiar la caché",
+    "tarkovtracker_linked": "Cuenta de TarkovTracker vinculada: {{name}}"
   },
   "ui": {
     "initializing": "Inicializando...",
@@ -190,7 +199,9 @@
     "reset": "Restablecer valores predeterminados",
     "ll_level": "LL {{level}}",
     "refresh_data": "Forzar recarga de datos",
-    "refresh_data_tooltip": "Limpiar datos de juego en caché y re-descargar desde Tarkov.dev"
+    "refresh_data_tooltip": "Limpiar datos de juego en caché y re-descargar desde Tarkov.dev",
+    "quest_badge_label": "Bloqueado por misión",
+    "quest_badge_tooltip": "Solo se puede comprar tras completar la misión «{{quest}}» — vincula tu cuenta de TarkovTracker para verificarlo, o excluye este objeto si aún no la has completado."
   },
   "error": {
     "title": "Ocurrió un error",

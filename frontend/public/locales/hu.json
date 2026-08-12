@@ -23,7 +23,15 @@
     "fast": "Gyors",
     "auto": "Auto",
     "precise": "Pontos",
-    "solver_precision_tooltip": "Auto: kis fánál Pontos, nagynál Gyors. Gyors: gyors LP nagy modfákhoz. Pontos: teljes elhelyezési változók, lassabb de pontos többhelyes modoknál."
+    "solver_precision_tooltip": "Auto: kis fánál Pontos, nagynál Gyors. Gyors: gyors LP nagy modfákhoz. Pontos: teljes elhelyezési változók, lassabb de pontos többhelyes modoknál.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Kösd össze a TarkovTracker.org fiókodat, hogy a küldetéshez kötött kereskedői ajánlatokat ne csak jelezze, hanem ellenőrizze is az alkalmazás.",
+    "tarkovtracker_token_placeholder": "API token (csak olvasási jog ajánlott)",
+    "tarkovtracker_link": "Összekapcsolás",
+    "tarkovtracker_unlink": "Szétkapcsolás",
+    "tarkovtracker_linked_as": "Összekapcsolva mint {{name}}",
+    "tarkovtracker_error": "Sikertelen összekapcsolás — ellenőrizd a tokent",
+    "tarkovtracker_hint": "Hozz létre csak olvasható (GP) tokent itt:"
   },
   "tabs": {
     "explore": "Elemzés",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "Megoldó állapota: {{status}}",
     "preset_base_fallback": "A kiválasztott alap preset nem érhető el a jelenlegi kereskedő/bolhapiac beállításokkal — a solver automatikusan választotta az alapot.",
     "refresh_done": "Gyorsítótár törölve, újratöltés…",
-    "refresh_failed": "Nem sikerült törölni a gyorsítótárat"
+    "refresh_failed": "Nem sikerült törölni a gyorsítótárat",
+    "tarkovtracker_linked": "TarkovTracker fiók összekapcsolva: {{name}}"
   },
   "ui": {
     "initializing": "Inicializálás...",
@@ -190,7 +199,9 @@
     "reset": "Visszaállítás alapértelmezettre",
     "ll_level": "LL {{level}}",
     "refresh_data": "Adatok frissítésének kényszerítése",
-    "refresh_data_tooltip": "Gyorsítótárazott játékadatok törlése és újraletöltése a Tarkov.dev-ről"
+    "refresh_data_tooltip": "Gyorsítótárazott játékadatok törlése és újraletöltése a Tarkov.dev-ről",
+    "quest_badge_label": "Küldetéshez kötött",
+    "quest_badge_tooltip": "Csak a(z) „{{quest}}\" küldetés teljesítése után vásárolható meg — kösd össze a TarkovTracker fiókodat az ellenőrzéshez, vagy tiltsd le ezt a tárgyat, ha még nincs meg a küldetés."
   },
   "error": {
     "title": "Hiba történt",

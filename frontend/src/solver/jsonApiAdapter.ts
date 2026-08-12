@@ -57,6 +57,8 @@ interface JsonApiContext {
   handbookCategories: Record<string, RawItem>;
   traders: Record<string, { name: string; normalizedName: string }>;
   bartersByOfferedItem: Map<string, RawItem[]>;
+  /** Task id → translated name, for buyFromTrader[].taskUnlock (quest-gated offers). */
+  taskNames: Record<string, string>;
   /** Translate an items-endpoint placeholder ("<id> Name", "MOD_SCOPE", handbook id). */
   tr: (placeholder: string | undefined | null) => string;
 }
@@ -101,6 +103,12 @@ function buildBuyFor(raw: RawItem, ctx: JsonApiContext): RawItem[] {
     if (!trader) continue;
     const priceRUB = offer.priceRUB ?? offer.price ?? 0;
     if (priceRUB <= 0) continue;
+    // Quest-gated offer (independent of minTraderLevel) — reshaped to match
+    // the GraphQL TraderOffer.taskUnlock {id, name} shape so dataService's
+    // extract* functions handle both paths identically.
+    const taskUnlock = offer.taskUnlock
+      ? { id: offer.taskUnlock, name: ctx.taskNames[offer.taskUnlock] ?? offer.taskUnlock }
+      : null;
     buyFor.push({
       currency: offer.currency ?? 'RUB',
       price: offer.price ?? priceRUB,
@@ -111,6 +119,7 @@ function buildBuyFor(raw: RawItem, ctx: JsonApiContext): RawItem[] {
         normalizedName: trader.normalizedName,
         minTraderLevel: offer.minTraderLevel ?? 1,
         buyLimit: offer.buyLimit ?? 0,
+        taskUnlock,
       },
     });
   }
@@ -289,7 +298,7 @@ export async function fetchFromJsonApi(
   const mode = gameMode || 'regular';
   const needLangOverlay = lang !== 'en';
 
-  const [itemsJson, itemsEnOverlay, itemsLangOverlay, tradersJson, tradersEnOverlay, tradersLangOverlay, bartersJson] =
+  const [itemsJson, itemsEnOverlay, itemsLangOverlay, tradersJson, tradersEnOverlay, tradersLangOverlay, bartersJson, tasksJson, tasksEnOverlay, tasksLangOverlay] =
     await Promise.all([
       fetchJson(`${JSON_API_BASE}/${mode}/items`),
       fetchOverlay(`${JSON_API_BASE}/${mode}/items_en`),
@@ -298,15 +307,22 @@ export async function fetchFromJsonApi(
       fetchOverlay(`${JSON_API_BASE}/${mode}/traders_en`),
       needLangOverlay ? fetchOverlay(`${JSON_API_BASE}/${mode}/traders_${lang}`) : Promise.resolve({}),
       fetchJson(`${JSON_API_BASE}/${mode}/barters`),
+      // Task names for quest-gated offer badges — display-only, so a fetch
+      // failure must not break the whole data load (fetchOverlay-style try/catch).
+      fetchJson(`${JSON_API_BASE}/${mode}/tasks`).catch(() => ({ data: {} })),
+      fetchOverlay(`${JSON_API_BASE}/${mode}/tasks_en`),
+      needLangOverlay ? fetchOverlay(`${JSON_API_BASE}/${mode}/tasks_${lang}`) : Promise.resolve({}),
     ]);
 
   const data = itemsJson.data ?? {};
   const rawItems: Record<string, RawItem> = data.items ?? {};
   const rawTraders: Record<string, RawItem> = tradersJson.data ?? {};
   const rawBarters: RawItem[] = bartersJson.data ?? [];
+  const rawTasks: Record<string, RawItem> = tasksJson.data ?? {};
 
   const tr = makeTranslator(itemsLangOverlay, itemsEnOverlay);
   const tradersTr = makeTranslator(tradersLangOverlay, tradersEnOverlay);
+  const tasksTr = makeTranslator(tasksLangOverlay, tasksEnOverlay);
 
   // Trader id → translated {name, normalizedName}
   const traders: JsonApiContext['traders'] = {};
@@ -315,6 +331,12 @@ export async function fetchFromJsonApi(
       name: tradersTr(trader.name) || trader.normalizedName || id,
       normalizedName: trader.normalizedName ?? '',
     };
+  }
+
+  // Task id → translated name, for quest-gated offer badges.
+  const taskNames: Record<string, string> = {};
+  for (const [id, task] of Object.entries(rawTasks)) {
+    taskNames[id] = tasksTr(task.name) || id;
   }
 
   // Index barters by offered item id → GraphQL `bartersFor` shape.
@@ -356,6 +378,7 @@ export async function fetchFromJsonApi(
     handbookCategories: data.handbookCategories ?? {},
     traders,
     bartersByOfferedItem,
+    taskNames,
     tr,
   };
 

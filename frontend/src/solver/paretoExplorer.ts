@@ -36,6 +36,8 @@ export interface ParetoParams {
   /** Forced build base — see SolveParams.presetId. Applied to every frontier point. */
   presetId?: string | null;
   preciseMode?: boolean;
+  /** See SolveParams.completedTasks. Applied to every frontier point. */
+  completedTasks?: Set<string> | null;
 }
 
 function buildBaseParams(p: ParetoParams): Omit<SolveParams, 'ergoWeight' | 'recoilWeight' | 'priceWeight' | 'maxRecoilV' | 'minErgonomics' | 'maxPrice'> {
@@ -60,6 +62,7 @@ function buildBaseParams(p: ParetoParams): Omit<SolveParams, 'ergoWeight' | 'rec
     playerLevel: p.playerLevel,
     presetId: p.presetId,
     preciseMode: p.preciseMode,
+    completedTasks: p.completedTasks,
   };
 }
 

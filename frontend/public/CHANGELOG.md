@@ -2,6 +2,52 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.7.0] — 2026-08-13
+
+### Added
+- **TarkovTracker.org quest-completion link.** Trader offers gated behind a quest (independent of trader level — e.g. the AR-15 Magpul PRS GEN3 stock, only sellable at Peacekeeper LL3 after "I Need More Power") are no longer silently treated as unconditionally available. By default such an offer still shows (never excluded on a guess) but carries an orange "Quest-locked" badge naming the quest, so a build's real-life availability makes sense even without linking anything. Linking a read-only TarkovTracker API token in Settings → Player & Trader Access → TarkovTracker fetches your actual quest progress; only then does an offer get excluded from builds, and only when the link confirms the quest is genuinely incomplete. Flea/other trader offers for the same item are unaffected — exclusion is per-offer, not per-item. i18n in all 16 locales.
+- `taskUnlock` data is now fetched on both the GraphQL and JSON-API fallback paths (the JSON path resolves quest names via a new `tasks`/`tasks_en` overlay fetch, matching the GraphQL shape).
+
+## [v2.6.6] — 2026-07-29
+
+### Added
+- **Lock / ban mods from the Explore build-detail modal.** The modal's build manifest (Detailed/Compact/Table views) now has the same lock (must-include) and ban (never-use) row actions as the Optimize tab. Toggles update the shared include/exclude constraints immediately and rows show their locked/banned state; constraints take effect on the next manually triggered explore run (no auto-re-run of the whole Pareto frontier). Optimize and Explore share one include/exclude state, so constraints set in either tab apply to both.
+
+## [v2.6.5] — 2026-07-28
+
+### Added
+- **Full in-page build view for Explore frontier builds.** Each build in the Explore results list now has a **View** button opening a modal with the exact Optimize-tab build rendering — stat cards (ergo/recoil/MOA/weight/total cost), preset card, and the full build manifest with item images, prices, trader icons, barter tooltips, and scarce/stale/unstable badges (Detailed/Compact/Table view modes included). Components are shared with the Optimize tab, not forked; the EFT Forge external link remains as a secondary action. i18n in all 16 locales.
+
+## [v2.6.4] — 2026-07-28
+
+### Added
+- **"Exclude scarce offers" switch** in the Market & Trader Access box (shown when flea access is on, persisted with the other market settings). When enabled, the optimizer skips flea offers with ≤ 3 active listings — the same threshold as the "scarce" badge introduced in v2.6.2. Scarcity is evaluated per offer, not per item: a part still buyable from a trader (within trader-level settings) or via an enabled barter stays available; only parts whose *sole* source is a scarce flea listing drop out of builds entirely. Applies to Optimize, Explore, Gunsmith, and the base-preset listing. i18n in all 16 locales.
+
+## [v2.6.3] — 2026-07-28
+
+### Added
+- **Base preset selector.** Once a weapon is selected, a "Base preset" dropdown lists every purchasable preset for it (image, name, live price, and source — trader/barter/flea at the current availability settings) plus **Stock (naked)** and the default **Auto** (solver picks the optimal base, unchanged behavior). Picking a preset forces the solver to build on top of exactly that base; the constraint applies to both Optimize and Explore modes. If the forced base isn't purchasable at the current trader/flea/barter settings, the solver falls back to auto and a warning toast explains why. i18n in all 16 locales.
+
+### Fixed
+- Weapon change now also clears the previously fetched preset list — the dropdown briefly showed the *previous* weapon's presets until the new fetch landed.
+
+## [v2.6.2] — 2026-07-28
+
+### Fixed
+- **Flea-banned (`noFlea`) items are no longer treated as flea-available.** 53 mods (REAP-IR thermal, SureFire 60-rounders, …) carry tarkov.dev's `noFlea` flag and report a nonzero `lastOfferCount` despite being unlistable — so offer count alone is not a trustworthy availability signal. Both the GraphQL and JSON API paths now skip flea offers for `noFlea` items explicitly (previously only saved accidentally by their `lastLowPrice` being null). `types` is now fetched/passed through on both paths; `CACHE_VERSION` 16 → 17.
+
+### Added
+- **Bait-listing guard for flea prices.** Effective flea price is now `max(lastLowPrice, low24hPrice)` on both paths: a current listing priced below the day's lowest observed price is treated as a possible bait/outlier and priced conservatively instead of skewing build totals.
+- **Flea price badges in build results.** Item rows (and preset cards) whose price comes from the flea market now show small badges: **scarce** (≤ 3 active offers at last scan), **stale** (price data older than 24 h), and **unstable** (current price deviates > 2.5× from the 24 h average — flag only, never changes the price used). With tooltips, in all 16 locales.
+
+## [v2.6.1] — 2026-07-28
+
+### Added
+- **JSON API fallback for game data** (`jsonApiAdapter.ts`). The tarkov.dev GraphQL API has had extended outages (HTTP 503 on every query since 2026-07-21, upstream issue the-hideout/tarkov-api#474). On any GraphQL failure the app now falls back to the maintainer-recommended JSON API (`json.tarkov.dev`), reshaping its responses (id-keyed item dicts, placeholder names + per-language translation overlays, trader-id offers, flat barter list) into the GraphQL item shape the solver already consumes — no downstream changes. GraphQL stays the primary source; fallback results are cached in IndexedDB like GraphQL results (`CACHE_VERSION` 15 → 16). GraphQL retries reduced from 3 (~14s worst case) to 2 quick attempts so the fallback kicks in fast.
+
+### Fixed
+- **Flea-market prices now track current listings instead of 24h averages.** Neither tarkov.dev API exposes individual active listings, so flea offers are now priced at the item's `lastLowPrice` (current cheapest listing) on both the GraphQL and JSON paths, and items reporting `lastOfferCount <= 0` are treated as flea-unavailable (previously an average-based flea price was used even when nothing was actually listed). Barter required-item unit costs now prefer `lastLowPrice` over `avg24hPrice`. `avg24hPrice` remains only in reference/display roles.
+
 ## [v2.5.5] — 2026-04-20
 
 ### Added

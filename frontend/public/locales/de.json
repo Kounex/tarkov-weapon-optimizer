@@ -23,7 +23,15 @@
     "fast": "Schnell",
     "auto": "Auto",
     "precise": "Präzise",
-    "solver_precision_tooltip": "Auto: Präzise bei kleinem Baum, Schnell bei großem. Schnell: schnelles LP für große Mod-Bäume. Präzise: vollständige Platzierungsvariablen, langsamer, aber exakt bei Multi-Slot-Mods."
+    "solver_precision_tooltip": "Auto: Präzise bei kleinem Baum, Schnell bei großem. Schnell: schnelles LP für große Mod-Bäume. Präzise: vollständige Platzierungsvariablen, langsamer, aber exakt bei Multi-Slot-Mods.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Verknüpfe dein TarkovTracker.org-Konto, um quest-gesperrte Händlerangebote zu verifizieren, statt sie nur zu markieren.",
+    "tarkovtracker_token_placeholder": "API-Token (nur Lesezugriff empfohlen)",
+    "tarkovtracker_link": "Verknüpfen",
+    "tarkovtracker_unlink": "Trennen",
+    "tarkovtracker_linked_as": "Verknüpft als {{name}}",
+    "tarkovtracker_error": "Verknüpfung fehlgeschlagen — Token prüfen",
+    "tarkovtracker_hint": "Erstelle einen Nur-Lese-Token (GP) auf"
   },
   "tabs": {
     "explore": "Erkunden",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "Solver-Status: {{status}}",
     "preset_base_fallback": "Das gewählte Basis-Preset ist bei den aktuellen Händler-/Flohmarkt-Einstellungen nicht verfügbar — der Solver hat die Basis automatisch gewählt.",
     "refresh_done": "Cache geleert, neu laden…",
-    "refresh_failed": "Cache konnte nicht geleert werden"
+    "refresh_failed": "Cache konnte nicht geleert werden",
+    "tarkovtracker_linked": "Mit TarkovTracker verknüpft als {{name}}"
   },
   "ui": {
     "initializing": "Initialisierung...",
@@ -190,7 +199,9 @@
     "reset": "Auf Standard zurücksetzen",
     "ll_level": "LL {{level}}",
     "refresh_data": "Daten neu laden",
-    "refresh_data_tooltip": "Zwischengespeicherte Spieldaten löschen und von Tarkov.dev neu abrufen"
+    "refresh_data_tooltip": "Zwischengespeicherte Spieldaten löschen und von Tarkov.dev neu abrufen",
+    "quest_badge_label": "Quest-gesperrt",
+    "quest_badge_tooltip": "Nur käuflich nach Abschluss der Quest „{{quest}}\" — verknüpfe dein TarkovTracker-Konto zur Bestätigung oder verbanne diesen Gegenstand, falls du die Quest noch nicht hast."
   },
   "error": {
     "title": "Ein Fehler ist aufgetreten",

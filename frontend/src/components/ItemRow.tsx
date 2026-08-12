@@ -130,6 +130,30 @@ export function FleaBadges({ item }: { item: FleaSignals }) {
   )
 }
 
+interface TaskLockSignals {
+  task_unlock_name?: string
+  task_locked_status?: 'unverified' | 'verified'
+}
+
+/**
+ * Badge for a trader offer gated behind a quest (independent of trader level).
+ * Only rendered when unverified — a linked TarkovTracker account confirming
+ * the quest is done ('verified') means there's nothing left to flag. Real
+ * exclusion (confirmed NOT done) already happened upstream in the solver, so
+ * this only ever surfaces the "shown but not proven yet" case.
+ */
+export function QuestBadge({ item }: { item: TaskLockSignals }) {
+  const { t } = useTranslation()
+  if (item.task_locked_status !== 'unverified' || !item.task_unlock_name) return null
+  return (
+    <Tooltip title={t('ui.quest_badge_tooltip', { quest: item.task_unlock_name })}>
+      <Tag color="orange" bordered={false} style={{ margin: 0, fontSize: 10, padding: '0 4px', lineHeight: '16px' }}>
+        {t('ui.quest_badge_label')}
+      </Tag>
+    </Tooltip>
+  )
+}
+
 export function ItemTooltip({ item, children }: { item: ItemDetail; children: React.ReactElement }) {
   const { t } = useTranslation()
   const lines: React.ReactNode[] = []
@@ -245,7 +269,7 @@ export function ItemRow({ item, hidePrice = false, compactMode = false, lockedId
            </div>
            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: 12, paddingLeft: hasActions ? 34 : 0 }}>
              <TraderIcon source={item.source} unknownLabel={unknownLabel} compact barterRequirements={item.barter_requirements} />
-             {!hidePrice && <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}><FleaBadges item={item} /><Tag color="gold" style={{ margin: 0, fontSize: 11 }}>{priceCell(item)}</Tag></span>}
+             {!hidePrice && <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}><FleaBadges item={item} /><QuestBadge item={item} /><Tag color="gold" style={{ margin: 0, fontSize: 11 }}>{priceCell(item)}</Tag></span>}
            </div>
         </div>
       )
@@ -263,7 +287,7 @@ export function ItemRow({ item, hidePrice = false, compactMode = false, lockedId
         <div style={{ width: 80, textAlign: 'left', flexShrink: 0 }}>
           <TraderIcon source={item.source} unknownLabel={unknownLabel} compact barterRequirements={item.barter_requirements} />
         </div>
-        {!hidePrice && <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}><FleaBadges item={item} /><div style={{ width: 70, textAlign: 'right' }}><Tag color="gold" style={{ margin: 0, fontSize: 11 }}>{priceCell(item)}</Tag></div></div>}
+        {!hidePrice && <div style={{ display: 'flex', gap: 4, alignItems: 'center', flexShrink: 0 }}><FleaBadges item={item} /><QuestBadge item={item} /><div style={{ width: 70, textAlign: 'right' }}><Tag color="gold" style={{ margin: 0, fontSize: 11 }}>{priceCell(item)}</Tag></div></div>}
       </div>
     )
   }
@@ -295,7 +319,7 @@ export function ItemRow({ item, hidePrice = false, compactMode = false, lockedId
         <div style={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8 }}>
             <Text strong style={{ fontSize: 13, lineHeight: 1.3, wordBreak: 'break-word', ...clickableStyle }} onClick={() => copyToClipboard(item.name)}>{item.name}</Text>
-            {!hidePrice && <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center', flexShrink: 0 }}><FleaBadges item={item} /><Tag color="gold" style={{ margin: 0, border: 'none', background: token.colorFillQuaternary, fontWeight: 600 }}>{priceCell(item)}</Tag></span>}
+            {!hidePrice && <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center', flexShrink: 0 }}><FleaBadges item={item} /><QuestBadge item={item} /><Tag color="gold" style={{ margin: 0, border: 'none', background: token.colorFillQuaternary, fontWeight: 600 }}>{priceCell(item)}</Tag></span>}
           </div>
 
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 2 }}>
@@ -347,7 +371,7 @@ export function ItemRow({ item, hidePrice = false, compactMode = false, lockedId
         </div>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6, width: 80 }}>
           {!hidePrice && <Tag color="gold" style={{ margin: 0, fontWeight: 600 }}>{priceCell(item)}</Tag>}
-          <FleaBadges item={item} />
+          <FleaBadges item={item} /><QuestBadge item={item} />
           {item.weight ? <Tag color="cyan" style={{ margin: 0 }}>{item.weight.toFixed(2)} {t('ui.weight_unit')}</Tag> : null}
         </div>
       </div>

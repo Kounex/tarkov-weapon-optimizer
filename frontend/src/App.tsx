@@ -21,7 +21,8 @@ import { amoledDarkToken } from './theme/amoledDark'
 import { darkPaletteTokens, type DarkPaletteId } from './theme/darkPalettes'
 import { lightPaletteTokens, type LightPaletteId } from './theme/lightPalettes'
 import { includeCategoryInModFilter } from './solver/modCategoryFilter'
-import { DEFAULT_TRADER_LEVELS, type TraderLevels } from './solver/types'
+import { DEFAULT_TRADER_LEVELS, type TraderLevels, DEFAULT_TARKOVTRACKER_LINK, type TarkovTrackerLinkState } from './solver/types'
+import { fetchTarkovTrackerProgress } from './api/tarkovTracker'
 
 const { Header, Content, Footer } = Layout
 const { Text, Link } = Typography
@@ -59,6 +60,7 @@ const THEME_MODE_LEGACY = 'themeMode'
 const AUTO_DARK_PALETTE_KEY = 'autoDarkPalette'
 const AUTO_LIGHT_PALETTE_KEY = 'autoLightPalette'
 const LEVEL_CONFIG_STORAGE_KEY = 'levelConfig'
+const TARKOVTRACKER_TOKEN_STORAGE_KEY = 'tarkovTrackerToken'
 
 /** PvP = `regular`, PvE = `pve` (matches API / Tarkov.dev). */
 const GAME_MODE_STORAGE_KEY = 'mode'
@@ -251,6 +253,13 @@ function AppContent({
     return 'auto'
   })
   const [traderLevels, setTraderLevels] = useState(initialLevelConfig.traderLevels)
+  const [tarkovTracker, setTarkovTracker] = useState<TarkovTrackerLinkState>(() => ({
+    ...DEFAULT_TARKOVTRACKER_LINK,
+    token: localStorage.getItem(TARKOVTRACKER_TOKEN_STORAGE_KEY) ?? '',
+  }))
+  // Completed-task IDs from a linked account, or null when unconfirmed (no
+  // account linked / fetch failed) — see SolveParams.completedTasks.
+  const [completedTaskIds, setCompletedTaskIds] = useState<string[] | null>(null)
   const [activeTab, setActiveTab] = useState<string>('optimize')
   const [viewMode, setViewMode] = useState<'detailed' | 'compact' | 'table'>(() => {
     const s = localStorage.getItem('viewMode')
@@ -324,6 +333,42 @@ function AppContent({
       JSON.stringify({ playerLevel, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, traderLevels }),
     )
   }, [playerLevel, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, traderLevels])
+
+  const handleTarkovTrackerLink = async () => {
+    const token = tarkovTracker.token.trim()
+    if (!token) return
+    setTarkovTracker(prev => ({ ...prev, status: 'checking', error: undefined }))
+    try {
+      const progress = await fetchTarkovTrackerProgress(token)
+      localStorage.setItem(TARKOVTRACKER_TOKEN_STORAGE_KEY, token)
+      setTarkovTracker({ token, status: 'linked', displayName: progress.displayName })
+      setCompletedTaskIds(progress.completedTaskIds)
+      messageApi.success(t('toast.tarkovtracker_linked', { name: progress.displayName }))
+    } catch (err) {
+      console.error('TarkovTracker link failed', err)
+      const msg = err instanceof Error ? err.message : String(err)
+      // A failed fetch never counts as confirmed — leave completedTaskIds as
+      // whatever it was (null if never linked), so quest-gated offers stay
+      // unconfirmed (shown, flagged) rather than wrongly excluded.
+      setTarkovTracker(prev => ({ ...prev, status: 'error', error: msg }))
+    }
+  }
+
+  const handleTarkovTrackerUnlink = () => {
+    localStorage.removeItem(TARKOVTRACKER_TOKEN_STORAGE_KEY)
+    setTarkovTracker({ ...DEFAULT_TARKOVTRACKER_LINK })
+    setCompletedTaskIds(null)
+  }
+
+  // Auto-link on load when a token is already stored, so returning users
+  // don't need to re-click "Link" every session.
+  useEffect(() => {
+    if (tarkovTracker.token && tarkovTracker.status === 'idle') {
+      handleTarkovTrackerLink()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const themeSelectOptions = useMemo(
     () => [
       // Light themes disabled — item images lack transparent backgrounds
@@ -430,6 +475,7 @@ function AppContent({
       barter_exclude_dogtags: barterExcludeDogtags,
       exclude_scarce: excludeScarce,
       player_level: playerLevel,
+      completed_task_ids: completedTaskIds ?? undefined,
     }, gameMode, i18n.language || 'en')
       .then(data => {
         if (seq !== presetRequestSeq.current) return
@@ -445,7 +491,7 @@ function AppContent({
         if (seq !== presetRequestSeq.current) return
         setLoadingPresets(false)
       })
-  }, [selectedGunId, gameMode, i18n.language, traderLevels, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, playerLevel])
+  }, [selectedGunId, gameMode, i18n.language, traderLevels, fleaAvailable, barterAvailable, barterExcludeDogtags, excludeScarce, playerLevel, completedTaskIds])
 
   const categories = useMemo(() => {
     const filtered = selectedCaliber === 'All' ? guns : guns.filter(g => g.caliber === selectedCaliber)
@@ -574,6 +620,7 @@ function AppContent({
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
         exclude_scarce: excludeScarce,
+        completed_task_ids: completedTaskIds ?? undefined,
         preset_id: selectedPresetId,
         precise_mode: solverPrecision,
       }, gameMode, i18n.language || 'en')
@@ -618,6 +665,7 @@ function AppContent({
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
         exclude_scarce: excludeScarce,
+        completed_task_ids: completedTaskIds ?? undefined,
         preset_id: selectedPresetId,
         precise_mode: solverPrecision,
       }, gameMode, i18n.language || 'en')
@@ -664,6 +712,7 @@ function AppContent({
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
         exclude_scarce: excludeScarce,
+        completed_task_ids: completedTaskIds ?? undefined,
         precise_mode: true,
       }, gameMode, i18n.language || 'en')
       setGunsmithResult(res)
@@ -778,6 +827,7 @@ function AppContent({
         barter_available: barterAvailable,
         barter_exclude_dogtags: barterExcludeDogtags,
         exclude_scarce: excludeScarce,
+        completed_task_ids: completedTaskIds ?? undefined,
         precise_mode: solverPrecision,
       }, gameMode, i18n.language || 'en')
       setImportResult(res)
@@ -862,6 +912,10 @@ function AppContent({
     onPlayerLevelChange: setPlayerLevel,
     traderLevels,
     onTraderLevelsChange: setTraderLevels,
+    tarkovTracker,
+    onTarkovTrackerTokenChange: (v: string) => setTarkovTracker(prev => ({ ...prev, token: v })),
+    onTarkovTrackerLink: handleTarkovTrackerLink,
+    onTarkovTrackerUnlink: handleTarkovTrackerUnlink,
   }
 
   const tabItems = [
@@ -975,6 +1029,10 @@ function AppContent({
               onPlayerLevelChange={setPlayerLevel}
               traderLevels={traderLevels}
               onTraderLevelsChange={setTraderLevels}
+              tarkovTracker={tarkovTracker}
+              onTarkovTrackerTokenChange={(v: string) => setTarkovTracker(prev => ({ ...prev, token: v }))}
+              onTarkovTrackerLink={handleTarkovTrackerLink}
+              onTarkovTrackerUnlink={handleTarkovTrackerUnlink}
             />
           }
           right={
@@ -1021,6 +1079,10 @@ function AppContent({
               onPlayerLevelChange={setPlayerLevel}
               traderLevels={traderLevels}
               onTraderLevelsChange={setTraderLevels}
+              tarkovTracker={tarkovTracker}
+              onTarkovTrackerTokenChange={(v: string) => setTarkovTracker(prev => ({ ...prev, token: v }))}
+              onTarkovTrackerLink={handleTarkovTrackerLink}
+              onTarkovTrackerUnlink={handleTarkovTrackerUnlink}
               lockedModsCost={importLockedModsCost}
             />
           }

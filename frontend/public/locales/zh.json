@@ -23,7 +23,15 @@
     "fast": "快速",
     "auto": "自动",
     "precise": "精确",
-    "solver_precision_tooltip": "自动：配件树小的时候用「精确」，大的时候用「快速」。快速模式：大配件树也能很快出结果。精确模式：考虑完整安装位变量，多件占多槽时更准，但会更慢。"
+    "solver_precision_tooltip": "自动：配件树小的时候用「精确」，大的时候用「快速」。快速模式：大配件树也能很快出结果。精确模式：考虑完整安装位变量，多件占多槽时更准，但会更慢。",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "关联您的 TarkovTracker.org 账号，验证任务解锁的商人报价，而不只是标记提示。",
+    "tarkovtracker_token_placeholder": "API 令牌（建议使用只读权限）",
+    "tarkovtracker_link": "关联",
+    "tarkovtracker_unlink": "取消关联",
+    "tarkovtracker_linked_as": "已关联：{{name}}",
+    "tarkovtracker_error": "关联失败 — 请检查令牌",
+    "tarkovtracker_hint": "前往以下网址创建只读（GP）令牌："
   },
   "tabs": {
     "explore": "属性权衡",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "求解器返回状态：{{status}}",
     "preset_base_fallback": "所选基础预设在当前商人/跳蚤设置下不可用 — 优化器已自动选择基础。",
     "refresh_done": "缓存已清空，重新加载中…",
-    "refresh_failed": "清空缓存失败"
+    "refresh_failed": "清空缓存失败",
+    "tarkovtracker_linked": "已关联 TarkovTracker 账号：{{name}}"
   },
   "ui": {
     "initializing": "加载中…",
@@ -190,7 +199,9 @@
     "ban_action_tooltip_remove": "取消禁用 (不再排除)",
     "changelog_title": "更新日志",
     "refresh_data": "强制更新数据",
-    "refresh_data_tooltip": "清空缓存并从 Tarkov.dev 重新下载游戏数据"
+    "refresh_data_tooltip": "清空缓存并从 Tarkov.dev 重新下载游戏数据",
+    "quest_badge_label": "任务解锁",
+    "quest_badge_tooltip": "需完成任务「{{quest}}」才能购买 — 关联 TarkovTracker 账号以验证，若尚未完成可将此物品禁用。"
   },
   "trader": {
     "prapor": "Prapor",

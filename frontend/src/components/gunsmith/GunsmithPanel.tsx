@@ -2,7 +2,7 @@ import { useTranslation } from 'react-i18next'
 import { Card, Select, Space, Tag, Typography, message } from 'antd'
 import { LevelConfig } from '../common/LevelConfig'
 import type { GunsmithTask } from '../../api/client'
-import type { TraderLevels } from '../../solver/types'
+import type { TraderLevels, TarkovTrackerLinkState } from '../../solver/types'
 
 const { Text, Title } = Typography
 
@@ -23,6 +23,10 @@ interface GunsmithPanelProps {
   onPlayerLevelChange: (v: number) => void
   traderLevels: TraderLevels
   onTraderLevelsChange: (v: TraderLevels) => void
+  tarkovTracker: TarkovTrackerLinkState
+  onTarkovTrackerTokenChange: (v: string) => void
+  onTarkovTrackerLink: () => void
+  onTarkovTrackerUnlink: () => void
 }
 
 export function GunsmithPanel(props: GunsmithPanelProps) {
@@ -109,6 +113,10 @@ export function GunsmithPanel(props: GunsmithPanelProps) {
         onPlayerLevelChange={props.onPlayerLevelChange}
         traderLevels={props.traderLevels}
         onTraderLevelsChange={props.onTraderLevelsChange}
+        tarkovTracker={props.tarkovTracker}
+        onTarkovTrackerTokenChange={props.onTarkovTrackerTokenChange}
+        onTarkovTrackerLink={props.onTarkovTrackerLink}
+        onTarkovTrackerUnlink={props.onTarkovTrackerUnlink}
       />
     </div>
   )

@@ -23,7 +23,15 @@
     "fast": "Rapide",
     "auto": "Auto",
     "precise": "Précis",
-    "solver_precision_tooltip": "Auto : Précis si l'arbre est petit, Rapide s'il est grand. Rapide : LP rapide pour les grands arbres de mods. Précis : variables de placement complètes, plus lent mais exact sur les mods multi-emplacements."
+    "solver_precision_tooltip": "Auto : Précis si l'arbre est petit, Rapide s'il est grand. Rapide : LP rapide pour les grands arbres de mods. Précis : variables de placement complètes, plus lent mais exact sur les mods multi-emplacements.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Liez votre compte TarkovTracker.org pour vérifier les offres de marchands verrouillées par une quête, au lieu de simplement les signaler.",
+    "tarkovtracker_token_placeholder": "Jeton API (lecture seule recommandée)",
+    "tarkovtracker_link": "Lier",
+    "tarkovtracker_unlink": "Délier",
+    "tarkovtracker_linked_as": "Lié en tant que {{name}}",
+    "tarkovtracker_error": "Échec de la liaison — vérifiez votre jeton",
+    "tarkovtracker_hint": "Créez un jeton en lecture seule (GP) sur"
   },
   "tabs": {
     "explore": "Explorer",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "État du solveur : {{status}}",
     "preset_base_fallback": "Le préréglage de base choisi est indisponible aux réglages marchands/marché aux puces actuels — le solveur a choisi la base automatiquement.",
     "refresh_done": "Cache vidé, rechargement…",
-    "refresh_failed": "Impossible de vider le cache"
+    "refresh_failed": "Impossible de vider le cache",
+    "tarkovtracker_linked": "Compte TarkovTracker lié : {{name}}"
   },
   "ui": {
     "initializing": "Initialisation...",
@@ -190,7 +199,9 @@
     "reset": "Réinitialiser par défaut",
     "ll_level": "LL {{level}}",
     "refresh_data": "Forcer l'actualisation des données",
-    "refresh_data_tooltip": "Vider le cache et télécharger à nouveau les données depuis Tarkov.dev"
+    "refresh_data_tooltip": "Vider le cache et télécharger à nouveau les données depuis Tarkov.dev",
+    "quest_badge_label": "Verrouillé par quête",
+    "quest_badge_tooltip": "Achetable seulement après la quête « {{quest}} » — liez votre compte TarkovTracker pour vérifier, ou bannissez cet objet si vous ne l'avez pas encore."
   },
   "error": {
     "title": "Une erreur s'est produite",

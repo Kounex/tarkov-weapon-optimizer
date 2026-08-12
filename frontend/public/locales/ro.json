@@ -23,7 +23,15 @@
     "fast": "Rapid",
     "auto": "Auto",
     "precise": "Precis",
-    "solver_precision_tooltip": "Auto: Precis cu arbore mic, Rapid cu arbore mare. Rapid: LP rapid pentru arbori mari de moduri. Precis: variabile complete de plasare, mai lent dar exact la moduri multi-slot."
+    "solver_precision_tooltip": "Auto: Precis cu arbore mic, Rapid cu arbore mare. Rapid: LP rapid pentru arbori mari de moduri. Precis: variabile complete de plasare, mai lent dar exact la moduri multi-slot.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Conectează-ți contul TarkovTracker.org pentru a verifica ofertele comercianților blocate de misiuni, nu doar pentru a le semnala.",
+    "tarkovtracker_token_placeholder": "Token API (recomandat doar-citire)",
+    "tarkovtracker_link": "Conectează",
+    "tarkovtracker_unlink": "Deconectează",
+    "tarkovtracker_linked_as": "Conectat ca {{name}}",
+    "tarkovtracker_error": "Conectare eșuată — verifică tokenul",
+    "tarkovtracker_hint": "Creează un token doar-citire (GP) la"
   },
   "tabs": {
     "explore": "Analiză",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "Stare solver: {{status}}",
     "preset_base_fallback": "Presetul de bază selectat nu este disponibil la setările curente de comercianți/piața de vechituri — solverul a ales baza automat.",
     "refresh_done": "Cache șters, reîncarcă…",
-    "refresh_failed": "Nu se poate șterge cache"
+    "refresh_failed": "Nu se poate șterge cache",
+    "tarkovtracker_linked": "Cont TarkovTracker conectat: {{name}}"
   },
   "ui": {
     "initializing": "Se inițializează...",
@@ -190,7 +199,9 @@
     "reset": "Resetare la implicit",
     "ll_level": "LL {{level}}",
     "refresh_data": "Forțează actualizarea datelor",
-    "refresh_data_tooltip": "Șterge datele în cache și descarcă din nou de la Tarkov.dev"
+    "refresh_data_tooltip": "Șterge datele în cache și descarcă din nou de la Tarkov.dev",
+    "quest_badge_label": "Blocat de misiune",
+    "quest_badge_tooltip": "Poate fi cumpărat doar după finalizarea misiunii „{{quest}}\" — conectează-ți contul TarkovTracker pentru verificare, sau exclude acest obiect dacă nu ai finalizat-o încă."
   },
   "error": {
     "title": "A apărut o eroare",

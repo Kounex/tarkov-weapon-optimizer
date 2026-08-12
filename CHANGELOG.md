@@ -2,6 +2,12 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.7.0] — 2026-08-13
+
+### Added
+- **TarkovTracker.org quest-completion link.** Trader offers gated behind a quest (independent of trader level — e.g. the AR-15 Magpul PRS GEN3 stock, only sellable at Peacekeeper LL3 after "I Need More Power") are no longer silently treated as unconditionally available. By default such an offer still shows (never excluded on a guess) but carries an orange "Quest-locked" badge naming the quest, so a build's real-life availability makes sense even without linking anything. Linking a read-only TarkovTracker API token in Settings → Player & Trader Access → TarkovTracker fetches your actual quest progress; only then does an offer get excluded from builds, and only when the link confirms the quest is genuinely incomplete. Flea/other trader offers for the same item are unaffected — exclusion is per-offer, not per-item. i18n in all 16 locales.
+- `taskUnlock` data is now fetched on both the GraphQL and JSON-API fallback paths (the JSON path resolves quest names via a new `tasks`/`tasks_en` overlay fetch, matching the GraphQL shape).
+
 ## [v2.6.6] — 2026-07-29
 
 ### Added

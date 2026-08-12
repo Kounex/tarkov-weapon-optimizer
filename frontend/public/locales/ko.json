@@ -23,7 +23,15 @@
     "fast": "빠름",
     "auto": "자동",
     "precise": "정밀",
-    "solver_precision_tooltip": "자동: 트리가 작으면 정밀, 크면 빠름. 빠름: 큰 모드 트리용 빠른 LP. 정밀: 전체 배치 변수로 느리지만 다중 슬롯에 정확."
+    "solver_precision_tooltip": "자동: 트리가 작으면 정밀, 크면 빠름. 빠름: 큰 모드 트리용 빠른 LP. 정밀: 전체 배치 변수로 느리지만 다중 슬롯에 정확.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "TarkovTracker.org 계정을 연동하면 퀘스트로 잠긴 상인 판매 항목을 표시만 하지 않고 실제로 확인할 수 있습니다.",
+    "tarkovtracker_token_placeholder": "API 토큰 (읽기 전용 권장)",
+    "tarkovtracker_link": "연동",
+    "tarkovtracker_unlink": "연동 해제",
+    "tarkovtracker_linked_as": "{{name}}(으)로 연동됨",
+    "tarkovtracker_error": "연동 실패 — 토큰을 확인하세요",
+    "tarkovtracker_hint": "다음에서 읽기 전용(GP) 토큰을 생성하세요:"
   },
   "tabs": {
     "explore": "분석",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "솔버 상태: {{status}}",
     "preset_base_fallback": "선택한 기본 프리셋을 현재 상인/플리마켓 설정에서 사용할 수 없습니다 — 솔버가 자동으로 베이스를 선택했습니다.",
     "refresh_done": "캐시 삭제 완료, 다시 로드 중…",
-    "refresh_failed": "캐시를 삭제할 수 없습니다"
+    "refresh_failed": "캐시를 삭제할 수 없습니다",
+    "tarkovtracker_linked": "TarkovTracker 계정 연동됨: {{name}}"
   },
   "ui": {
     "initializing": "초기화 중...",
@@ -190,7 +199,9 @@
     "reset": "기본값으로 재설정",
     "ll_level": "LL {{level}}",
     "refresh_data": "데이터 강제 새로고침",
-    "refresh_data_tooltip": "캐시된 게임 데이터를 지우고 Tarkov.dev에서 다시 가져오기"
+    "refresh_data_tooltip": "캐시된 게임 데이터를 지우고 Tarkov.dev에서 다시 가져오기",
+    "quest_badge_label": "퀘스트 잠김",
+    "quest_badge_tooltip": "퀘스트 \"{{quest}}\"를 완료해야 구매할 수 있습니다 — TarkovTracker 계정을 연동해 확인하거나, 아직 완료하지 않았다면 이 아이템을 제외하세요."
   },
   "error": {
     "title": "오류가 발생했습니다",

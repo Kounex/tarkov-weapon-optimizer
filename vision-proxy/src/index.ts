@@ -11,6 +11,7 @@
 import { Hono } from 'hono'
 import { cors } from 'hono/cors'
 import { serve } from '@hono/node-server'
+import type { StatusCode } from 'hono/utils/http-status'
 
 const app = new Hono()
 
@@ -58,7 +59,46 @@ app.use('/extract', cors({
   maxAge: 86400,
 }))
 
+app.use('/tarkovtracker/*', cors({
+  origin: ALLOWED_ORIGIN === '*' ? '*' : [ALLOWED_ORIGIN, 'http://localhost:5173', 'http://localhost:4173'],
+  allowMethods: ['GET', 'OPTIONS'],
+  allowHeaders: ['Authorization'],
+  maxAge: 86400,
+}))
+
 app.get('/health', (c) => c.json({ status: 'ok' }))
+
+// TarkovTracker progress proxy — api.tarkovtracker.org locks CORS to its own
+// origin, so the browser can't call it directly. Pure passthrough: forwards
+// the user's own Bearer token as-is, no server-side secret involved (unlike
+// /extract's Gemini key), and never logs or stores the token.
+const TARKOVTRACKER_API = 'https://api.tarkovtracker.org'
+
+app.get('/tarkovtracker/progress', async (c) => {
+  const auth = c.req.header('Authorization')
+  if (!auth) {
+    return c.json({ error: 'Missing Authorization header' }, 401)
+  }
+
+  try {
+    const upstream = await fetch(`${TARKOVTRACKER_API}/progress`, {
+      headers: {
+        Authorization: auth,
+        'User-Agent': 'TarkovWeaponOptimizer/1.0 (+https://eft-builds.kounex.com)',
+      },
+    })
+    const body = await upstream.text()
+    return c.newResponse(body, upstream.status as StatusCode, {
+      'Content-Type': upstream.headers.get('Content-Type') ?? 'application/json',
+    })
+  } catch (err) {
+    console.error('TarkovTracker proxy error:', err)
+    return c.json(
+      { error: err instanceof Error ? err.message : 'Internal error' },
+      502,
+    )
+  }
+})
 
 app.post('/extract', async (c) => {
   const body = await c.req.json<{ image?: string; mimeType?: string }>()

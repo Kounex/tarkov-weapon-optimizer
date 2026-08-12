@@ -5,7 +5,7 @@ import {
 import { DollarOutlined } from '@ant-design/icons'
 import { WeightAdjuster } from '../common/WeightAdjuster'
 import { LevelConfig } from '../common/LevelConfig'
-import type { TraderLevels } from '../../solver/types'
+import type { TraderLevels, TarkovTrackerLinkState } from '../../solver/types'
 
 const { Paragraph } = Typography
 
@@ -32,6 +32,10 @@ interface ImportSidebarProps {
   onPlayerLevelChange: (v: number) => void
   traderLevels: TraderLevels
   onTraderLevelsChange: (v: TraderLevels) => void
+  tarkovTracker: TarkovTrackerLinkState
+  onTarkovTrackerTokenChange: (v: string) => void
+  onTarkovTrackerLink: () => void
+  onTarkovTrackerUnlink: () => void
   lockedModsCost: number
 }
 
@@ -58,6 +62,10 @@ export function ImportSidebar({
   onPlayerLevelChange,
   traderLevels,
   onTraderLevelsChange,
+  tarkovTracker,
+  onTarkovTrackerTokenChange,
+  onTarkovTrackerLink,
+  onTarkovTrackerUnlink,
   lockedModsCost,
 }: ImportSidebarProps) {
   const { t } = useTranslation()
@@ -139,6 +147,10 @@ export function ImportSidebar({
         onPlayerLevelChange={onPlayerLevelChange}
         traderLevels={traderLevels}
         onTraderLevelsChange={onTraderLevelsChange}
+        tarkovTracker={tarkovTracker}
+        onTarkovTrackerTokenChange={onTarkovTrackerTokenChange}
+        onTarkovTrackerLink={onTarkovTrackerLink}
+        onTarkovTrackerUnlink={onTarkovTrackerUnlink}
       />
     </div>
   )

@@ -3,7 +3,7 @@ import { WeightAdjuster } from '../common/WeightAdjuster'
 import { ModFilter } from '../common/ModFilter'
 import { LevelConfig } from '../common/LevelConfig'
 import type { Gun, ModInfo, ModCategoryOption, WeaponPresetOption, WeaponBaseOptions } from '../../api/client'
-import type { TraderLevels } from '../../solver/types'
+import type { TraderLevels, TarkovTrackerLinkState } from '../../solver/types'
 
 interface OptimizePanelProps {
   guns: Gun[]
@@ -72,6 +72,10 @@ interface OptimizePanelProps {
   onPlayerLevelChange: (v: number) => void
   traderLevels: TraderLevels
   onTraderLevelsChange: (v: TraderLevels) => void
+  tarkovTracker: TarkovTrackerLinkState
+  onTarkovTrackerTokenChange: (v: string) => void
+  onTarkovTrackerLink: () => void
+  onTarkovTrackerUnlink: () => void
 }
 
 export function OptimizePanel(props: OptimizePanelProps) {
@@ -150,6 +154,10 @@ export function OptimizePanel(props: OptimizePanelProps) {
         onPlayerLevelChange={props.onPlayerLevelChange}
         traderLevels={props.traderLevels}
         onTraderLevelsChange={props.onTraderLevelsChange}
+        tarkovTracker={props.tarkovTracker}
+        onTarkovTrackerTokenChange={props.onTarkovTrackerTokenChange}
+        onTarkovTrackerLink={props.onTarkovTrackerLink}
+        onTarkovTrackerUnlink={props.onTarkovTrackerUnlink}
       />
     </div>
   )

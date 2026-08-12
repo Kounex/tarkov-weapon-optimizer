@@ -23,7 +23,15 @@
     "fast": "高速",
     "auto": "自動",
     "precise": "精密",
-    "solver_precision_tooltip": "自動：ツリーが小さいとき精密、大きいとき高速。高速：大きなMODツリー向けの速いLP。精密：配置変数すべてで多スロットも正確だが遅い。"
+    "solver_precision_tooltip": "自動：ツリーが小さいとき精密、大きいとき高速。高速：大きなMODツリー向けの速いLP。精密：配置変数すべてで多スロットも正確だが遅い。",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "TarkovTracker.org アカウントを連携すると、クエストで制限された商人の出品を単なる表示ではなく実際に確認できます。",
+    "tarkovtracker_token_placeholder": "APIトークン（読み取り専用推奨）",
+    "tarkovtracker_link": "連携",
+    "tarkovtracker_unlink": "連携解除",
+    "tarkovtracker_linked_as": "{{name}} として連携済み",
+    "tarkovtracker_error": "連携に失敗しました — トークンを確認してください",
+    "tarkovtracker_hint": "読み取り専用（GP）トークンを以下で作成："
   },
   "tabs": {
     "explore": "分析",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "ソルバー状態: {{status}}",
     "preset_base_fallback": "選択したベースプリセットは現在のトレーダー/フリマ設定では利用できません — ソルバーが自動でベースを選択しました。",
     "refresh_done": "キャッシュをクリア、再読み込み中…",
-    "refresh_failed": "キャッシュのクリアに失敗しました"
+    "refresh_failed": "キャッシュのクリアに失敗しました",
+    "tarkovtracker_linked": "TarkovTracker アカウントと連携しました：{{name}}"
   },
   "ui": {
     "initializing": "初期化中...",
@@ -190,7 +199,9 @@
     "reset": "デフォルトにリセット",
     "ll_level": "LL {{level}}",
     "refresh_data": "データの強制更新",
-    "refresh_data_tooltip": "キャッシュをクリアし、Tarkov.devからゲームデータを再取得"
+    "refresh_data_tooltip": "キャッシュをクリアし、Tarkov.devからゲームデータを再取得",
+    "quest_badge_label": "クエスト制限",
+    "quest_badge_tooltip": "クエスト「{{quest}}」を完了しないと購入できません — TarkovTracker アカウントを連携して確認するか、未完了ならこのアイテムを禁止してください。"
   },
   "error": {
     "title": "エラーが発生しました",

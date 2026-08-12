@@ -26,6 +26,10 @@ export interface OfferInfo {
   updated?: string;
   /** Flea offers only: effective flea price deviates from avg24hPrice by >2.5x ("unstable" badge). */
   price_unstable?: boolean;
+  /** Trader offers only: quest that must be completed to unlock this specific offer, independent of minTraderLevel. */
+  task_unlock?: string | null;
+  /** Display name for task_unlock, when known. */
+  task_unlock_name?: string;
 }
 
 // --- Gun Stats ---
@@ -163,6 +167,18 @@ export const DEFAULT_TRADER_LEVELS: TraderLevels = {
   prapor: 4, skier: 4, peacekeeper: 4, mechanic: 4, jaeger: 4,
 };
 
+// --- TarkovTracker Link ---
+
+/** UI state for the optional TarkovTracker.org account link (quest-completion verification). */
+export interface TarkovTrackerLinkState {
+  token: string;
+  status: 'idle' | 'checking' | 'linked' | 'error';
+  displayName?: string;
+  error?: string;
+}
+
+export const DEFAULT_TARKOVTRACKER_LINK: TarkovTrackerLinkState = { token: '', status: 'idle' };
+
 // --- Worker Messages ---
 
 export interface WorkerRequest {
@@ -211,4 +227,11 @@ export interface SolveParams {
    */
   presetId?: string | null;
   preciseMode?: boolean;
+  /**
+   * Completed-task IDs from a linked TarkovTracker account, or null when
+   * unconfirmed (no account linked / fetch failed). Only when confirmed
+   * (non-null) does a quest-gated trader offer get excluded for an
+   * incomplete quest — unconfirmed never excludes, see getAvailablePrice.
+   */
+  completedTasks?: Set<string> | null;
 }

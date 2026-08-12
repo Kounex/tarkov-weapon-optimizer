@@ -23,7 +23,15 @@
     "fast": "Hızlı",
     "auto": "Oto",
     "precise": "Hassas",
-    "solver_precision_tooltip": "Oto: küçük ağaçta Hassas, büyükte Hızlı. Hızlı: büyük mod ağaçları için hızlı LP. Hassas: tam yerleşim değişkenleri, daha yavaş ama çoklu yuvada kesin."
+    "solver_precision_tooltip": "Oto: küçük ağaçta Hassas, büyükte Hızlı. Hızlı: büyük mod ağaçları için hızlı LP. Hassas: tam yerleşim değişkenleri, daha yavaş ama çoklu yuvada kesin.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Görevle kilitlenen tüccar tekliflerini sadece işaretlemek yerine doğrulamak için TarkovTracker.org hesabınızı bağlayın.",
+    "tarkovtracker_token_placeholder": "API belirteci (salt okunur önerilir)",
+    "tarkovtracker_link": "Bağla",
+    "tarkovtracker_unlink": "Bağlantıyı Kaldır",
+    "tarkovtracker_linked_as": "{{name}} olarak bağlandı",
+    "tarkovtracker_error": "Bağlantı başarısız — belirtecinizi kontrol edin",
+    "tarkovtracker_hint": "Salt okunur (GP) bir belirteç oluşturun:"
   },
   "tabs": {
     "explore": "Analiz",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "Çözücü durumu: {{status}}",
     "preset_base_fallback": "Seçilen temel hazır ayar mevcut tüccar/bit pazarı ayarlarında kullanılamıyor — çözücü tabanı otomatik seçti.",
     "refresh_done": "Önbellek temizlendi, yeniden yüklüyor…",
-    "refresh_failed": "Önbellek temizlenemedi"
+    "refresh_failed": "Önbellek temizlenemedi",
+    "tarkovtracker_linked": "TarkovTracker hesabı bağlandı: {{name}}"
   },
   "ui": {
     "initializing": "Başlatılıyor...",
@@ -190,7 +199,9 @@
     "reset": "Varsayılanlara sıfırla",
     "ll_level": "LL {{level}}",
     "refresh_data": "Verileri güncelle",
-    "refresh_data_tooltip": "Oyun verisi önbelleğini temizle ve Tarkov.dev'den yeniden indir"
+    "refresh_data_tooltip": "Oyun verisi önbelleğini temizle ve Tarkov.dev'den yeniden indir",
+    "quest_badge_label": "Görevle kilitli",
+    "quest_badge_tooltip": "Yalnızca \"{{quest}}\" görevi tamamlandıktan sonra satın alınabilir — doğrulamak için TarkovTracker hesabınızı bağlayın veya henüz tamamlamadıysanız bu eşyayı yasaklayın."
   },
   "error": {
     "title": "Bir hata oluştu",

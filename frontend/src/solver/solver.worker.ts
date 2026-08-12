@@ -62,6 +62,7 @@ interface WorkerMessage {
       barter_exclude_dogtags?: boolean;
       exclude_scarce?: boolean;
       player_level?: number;
+      completed_task_ids?: string[];
     };
   };
 }
@@ -147,6 +148,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
           // Price/filter presets at the caller's current trader/flea settings,
           // mirroring the LP's per-preset getAvailablePrice check.
           const av = payload.availability ?? {};
+          const completedTasksForPresets = av.completed_task_ids ? new Set(av.completed_task_ids) : null;
           const presets = weapon.presets
             .map(p => {
               const [price, source, avail, label] = getAvailablePrice(
@@ -157,6 +159,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
                 av.barter_available ?? false,
                 av.barter_exclude_dogtags ?? false,
                 av.exclude_scarce ?? false,
+                completedTasksForPresets,
               );
               return { id: p.id, name: p.name, image: p.image, price, source, label, available: avail && price > 0 };
             })
@@ -213,6 +216,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             playerLevel: req.player_level,
             presetId: req.preset_id ?? undefined,
             preciseMode: usePrecise,
+            completedTasks: req.completed_task_ids ? new Set(req.completed_task_ids) : null,
           });
 
           result.precision_request = precReq;
@@ -255,6 +259,7 @@ async function dispatchMessage(eventData: WorkerMessage): Promise<void> {
             playerLevel: req.player_level,
             presetId: req.preset_id ?? undefined,
             preciseMode: usePrecise,
+            completedTasks: req.completed_task_ids ? new Set(req.completed_task_ids) : null,
           });
 
           const result: ExploreResponse = {

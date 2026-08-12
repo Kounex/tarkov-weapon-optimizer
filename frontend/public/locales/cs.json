@@ -23,7 +23,15 @@
     "fast": "Rychlé",
     "auto": "Auto",
     "precise": "Přesné",
-    "solver_precision_tooltip": "Auto: Přesné u malého stromu, Rychlé u velkého. Rychlé: rychlé LP pro velké stromy modů. Přesné: úplné proměnné umístění, pomalejší ale přesné u víceslotových modů."
+    "solver_precision_tooltip": "Auto: Přesné u malého stromu, Rychlé u velkého. Rychlé: rychlé LP pro velké stromy modů. Přesné: úplné proměnné umístění, pomalejší ale přesné u víceslotových modů.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Propojte svůj účet TarkovTracker.org a ověřte si nabídky obchodníků zamčené questem, místo pouhého označení.",
+    "tarkovtracker_token_placeholder": "API token (doporučeno pouze pro čtení)",
+    "tarkovtracker_link": "Propojit",
+    "tarkovtracker_unlink": "Odpojit",
+    "tarkovtracker_linked_as": "Propojeno jako {{name}}",
+    "tarkovtracker_error": "Propojení se nezdařilo — zkontrolujte token",
+    "tarkovtracker_hint": "Vytvořte token jen pro čtení (GP) na"
   },
   "tabs": {
     "explore": "Analýza",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "Stav řešiče: {{status}}",
     "preset_base_fallback": "Vybraný základní preset není při aktuálním nastavení obchodníků/blešího trhu dostupný — solver zvolil základ automaticky.",
     "refresh_done": "Mezipaměť vymazána, opětovné načtení...",
-    "refresh_failed": "Nepodařilo se vymazat mezipaměť"
+    "refresh_failed": "Nepodařilo se vymazat mezipaměť",
+    "tarkovtracker_linked": "Účet TarkovTracker propojen: {{name}}"
   },
   "ui": {
     "initializing": "Inicializace...",
@@ -190,7 +199,9 @@
     "reset": "Obnovit výchozí",
     "ll_level": "LL {{level}}",
     "refresh_data": "Vynutit obnovení dat",
-    "refresh_data_tooltip": "Vymazat mezipaměť a znovu stáhnout data z Tarkov.dev"
+    "refresh_data_tooltip": "Vymazat mezipaměť a znovu stáhnout data z Tarkov.dev",
+    "quest_badge_label": "Zamčeno questem",
+    "quest_badge_tooltip": "Lze koupit až po dokončení questu „{{quest}}\" — propojte účet TarkovTracker pro ověření, nebo tuto položku zabanujte, pokud quest ještě nemáte."
   },
   "error": {
     "title": "Došlo k chybě",

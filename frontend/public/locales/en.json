@@ -23,7 +23,15 @@
     "fast": "Fast",
     "auto": "Auto",
     "precise": "Precise",
-    "solver_precision_tooltip": "Auto: Precise when the mod tree is small, Fast when large. Fast: quick LP for large mod trees. Precise: full placement variables, slower but exact on multi-slot items."
+    "solver_precision_tooltip": "Auto: Precise when the mod tree is small, Fast when large. Fast: quick LP for large mod trees. Precise: full placement variables, slower but exact on multi-slot items.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Link your TarkovTracker.org account to verify quest-locked trader offers instead of just flagging them.",
+    "tarkovtracker_token_placeholder": "API token (read-only recommended)",
+    "tarkovtracker_link": "Link",
+    "tarkovtracker_unlink": "Unlink",
+    "tarkovtracker_linked_as": "Linked as {{name}}",
+    "tarkovtracker_error": "Link failed — check your token",
+    "tarkovtracker_hint": "Create a read-only (GP) token at"
   },
   "tabs": {
     "explore": "Explore",
@@ -103,7 +111,8 @@
     "explore_empty": "No frontier points under current constraints",
     "gunsmith_infeasible": "No build satisfies this gunsmith task",
     "optimize_non_optimal": "Solver status: {{status}}",
-    "preset_base_fallback": "Selected base preset is unavailable at current trader/flea settings — the solver picked the base automatically."
+    "preset_base_fallback": "Selected base preset is unavailable at current trader/flea settings — the solver picked the base automatically.",
+    "tarkovtracker_linked": "Linked to TarkovTracker as {{name}}"
   },
   "ui": {
     "initializing": "Initializing...",
@@ -190,7 +199,9 @@
     "lock_action_tooltip_remove": "Unlock (remove from required)",
     "ban_action_tooltip_add": "Ban (exclude from next build)",
     "ban_action_tooltip_remove": "Unban (remove from excluded)",
-    "changelog_title": "Changelog"
+    "changelog_title": "Changelog",
+    "quest_badge_label": "Quest-locked",
+    "quest_badge_tooltip": "Only sellable after completing the quest \"{{quest}}\" — link your TarkovTracker account to verify, or ban this item if you don’t have it yet."
   },
   "trader": {
     "prapor": "Prapor",

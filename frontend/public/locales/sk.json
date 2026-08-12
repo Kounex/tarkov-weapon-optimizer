@@ -23,7 +23,15 @@
     "fast": "Rýchle",
     "auto": "Auto",
     "precise": "Presné",
-    "solver_precision_tooltip": "Auto: Presné pri malom strome, Rýchle pri veľkom. Rýchle: rýchle LP pre veľké stromy modov. Presné: úplné premenné umiestnenia, pomalšie ale presné pri viacslotových modo."
+    "solver_precision_tooltip": "Auto: Presné pri malom strome, Rýchle pri veľkom. Rýchle: rýchle LP pre veľké stromy modov. Presné: úplné premenné umiestnenia, pomalšie ale presné pri viacslotových modo.",
+    "tarkovtracker_title": "TarkovTracker",
+    "tarkovtracker_desc": "Prepoj svoj účet TarkovTracker.org a over si ponuky obchodníkov uzamknuté questom, namiesto len ich označenia.",
+    "tarkovtracker_token_placeholder": "API token (odporúča sa len na čítanie)",
+    "tarkovtracker_link": "Prepojiť",
+    "tarkovtracker_unlink": "Odpojiť",
+    "tarkovtracker_linked_as": "Prepojené ako {{name}}",
+    "tarkovtracker_error": "Prepojenie zlyhalo — skontroluj token",
+    "tarkovtracker_hint": "Vytvor token len na čítanie (GP) na"
   },
   "tabs": {
     "explore": "Analýza",
@@ -103,7 +111,8 @@
     "optimize_non_optimal": "Stav riešiča: {{status}}",
     "preset_base_fallback": "Vybraný základný preset nie je pri aktuálnom nastavení obchodníkov/blšieho trhu dostupný — solver zvolil základ automaticky.",
     "refresh_done": "Vymazaná cache, opätovné načítanie…",
-    "refresh_failed": "Nepodarilo sa vymazať cache"
+    "refresh_failed": "Nepodarilo sa vymazať cache",
+    "tarkovtracker_linked": "Účet TarkovTracker prepojený: {{name}}"
   },
   "ui": {
     "initializing": "Inicializácia...",
@@ -190,7 +199,9 @@
     "reset": "Obnoviť predvolené",
     "ll_level": "LL {{level}}",
     "refresh_data": "Vynútiť obnovenie údajov",
-    "refresh_data_tooltip": "Vymazať mezipaměť herných údajov a znova ich stiahnuť z Tarkov.dev"
+    "refresh_data_tooltip": "Vymazať mezipaměť herných údajov a znova ich stiahnuť z Tarkov.dev",
+    "quest_badge_label": "Uzamknuté questom",
+    "quest_badge_tooltip": "Dá sa kúpiť až po dokončení questu „{{quest}}\" — prepoj účet TarkovTracker na overenie, alebo túto položku zabanuj, ak quest ešte nemáš."
   },
   "error": {
     "title": "Vyskytla sa chyba",
