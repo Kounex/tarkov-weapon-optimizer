@@ -2,6 +2,11 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.7.1] — 2026-08-13
+
+### Fixed
+- **Quest-locked badge showed the raw quest ID instead of its name.** `jsonApiAdapter.ts` read the `/tasks` JSON-API response as a flat id→task dict, but that endpoint actually bundles several collections under `data` (`tasks`, `questItems`, `achievements`, `prestige`) with the real task dict nested one level deeper at `data.tasks`. Every lookup missed, silently falling back to the task ID string. Affects the JSON-API fallback path only (currently the active path — tarkov.dev's GraphQL API has been down since 2026-07-21); the primary GraphQL path already requested `taskUnlock { id name }` inline and was unaffected. Unrelated to whether a TarkovTracker account is linked.
+
 ## [v2.7.0] — 2026-08-13
 
 ### Added

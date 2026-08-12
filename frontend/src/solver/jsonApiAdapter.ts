@@ -318,7 +318,10 @@ export async function fetchFromJsonApi(
   const rawItems: Record<string, RawItem> = data.items ?? {};
   const rawTraders: Record<string, RawItem> = tradersJson.data ?? {};
   const rawBarters: RawItem[] = bartersJson.data ?? [];
-  const rawTasks: Record<string, RawItem> = tasksJson.data ?? {};
+  // Unlike /items and /traders, /tasks bundles several collections under
+  // `data` (tasks, questItems, achievements, prestige) — the task dict is
+  // nested one level deeper.
+  const rawTasks: Record<string, RawItem> = tasksJson.data?.tasks ?? {};
 
   const tr = makeTranslator(itemsLangOverlay, itemsEnOverlay);
   const tradersTr = makeTranslator(tradersLangOverlay, tradersEnOverlay);
