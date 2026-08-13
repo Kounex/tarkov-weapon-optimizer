@@ -2,6 +2,11 @@
 
 All notable changes to the Tarkov Weapon Mod Optimizer.
 
+## [v2.7.4] — 2026-08-13
+
+### Fixed
+- **Banning a base preset or the naked receiver showed an empty, unlabeled red chip in the Mod Filter's exclude list.** Base bans share the same underlying list as mod bans (`excludedModIds`), but `ModFilter` only ever knew how to resolve mod names — a preset/weapon id isn't in `availableMods`, so the chip rendered with no text. `ModFilter` now only renders entries it can actually resolve to a mod; banned bases get their own chip list next to the "Base preset" selector in `WeaponSelector` instead, resolved from the weapon's own name (naked) or the already-cached preset name lookup (a preset can only be banned after being shown in a build result, so its name is always available by then).
+
 ## [v2.7.3] — 2026-08-13
 
 ### Added

@@ -23,6 +23,8 @@ interface ExplorePanelProps {
   onPresetChange: (id: string | undefined) => void
   loadingPresets: boolean
   presetNameLookup: Record<string, { name: string; image?: string | null }>
+  excludedBaseIds?: string[]
+  onToggleExcludeBase?: (id: string) => void
   exploreTradeoff: 'price' | 'recoil' | 'ergo'
   onExploreTradeoffChange: (v: 'price' | 'recoil' | 'ergo') => void
   useExploreBudget: boolean
@@ -83,6 +85,8 @@ export function ExplorePanel(props: ExplorePanelProps) {
         onPresetChange={props.onPresetChange}
         loadingPresets={props.loadingPresets}
         presetNameLookup={props.presetNameLookup}
+        excludedBaseIds={props.excludedBaseIds}
+        onToggleExcludeBase={props.onToggleExcludeBase}
       />
       <Card size="small" title={<span style={{ userSelect: 'none' }}>{t('explore.tradeoff_strategy')}</span>}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>

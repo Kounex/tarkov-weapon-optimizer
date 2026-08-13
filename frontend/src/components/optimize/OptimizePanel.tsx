@@ -22,6 +22,8 @@ interface OptimizePanelProps {
   onPresetChange: (id: string | undefined) => void
   loadingPresets: boolean
   presetNameLookup: Record<string, { name: string; image?: string | null }>
+  excludedBaseIds?: string[]
+  onToggleExcludeBase?: (id: string) => void
   ergoWeight: number
   recoilWeight: number
   priceWeight: number
@@ -98,6 +100,8 @@ export function OptimizePanel(props: OptimizePanelProps) {
         onPresetChange={props.onPresetChange}
         loadingPresets={props.loadingPresets}
         presetNameLookup={props.presetNameLookup}
+        excludedBaseIds={props.excludedBaseIds}
+        onToggleExcludeBase={props.onToggleExcludeBase}
       />
       <WeightAdjuster
         ergoWeight={props.ergoWeight}

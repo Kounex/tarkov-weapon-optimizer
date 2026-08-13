@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Card, Select, Space, Row, Col, Typography } from 'antd'
+import { Card, Select, Space, Row, Col, Typography, Tag } from 'antd'
 import type { Gun, WeaponPresetOption } from '../../api/client'
 import { TraderIcon } from '../ItemRow'
 
@@ -25,9 +25,13 @@ interface WeaponSelectorProps {
   loadingPresets?: boolean
   /** id → name/image of every preset seen for this weapon (labels for options that became unavailable at current settings) */
   presetNameLookup?: Record<string, { name: string; image?: string | null }>
+  /** Same list as ModFilter's excludedModIds — a base (preset id, or a weapon's own id for its naked receiver) can be banned too. */
+  excludedBaseIds?: string[]
+  onToggleExcludeBase?: (id: string) => void
 }
 
 export function WeaponSelector({
+  guns,
   selectedGunId,
   onGunChange,
   selectedCategory,
@@ -43,10 +47,27 @@ export function WeaponSelector({
   onPresetChange,
   loadingPresets,
   presetNameLookup,
+  excludedBaseIds,
+  onToggleExcludeBase,
 }: WeaponSelectorProps) {
   const { t } = useTranslation()
   const [searchValue, setSearchValue] = useState('')
   const [dropdownOpen, setDropdownOpen] = useState(false)
+
+  // Banned bases resolve their display name either from the current weapon
+  // (naked receiver — banned under the weapon's own id) or from
+  // presetNameLookup (a preset can only be banned from a build result after
+  // already being fetched/shown once, so its name is always cached by then).
+  const bannedBaseEntries = (excludedBaseIds ?? [])
+    .map(id => {
+      if (id === selectedGunId) {
+        const gunName = guns.find(g => g.id === id)?.name
+        return gunName ? { id, name: `${t('ui.preset_base_stock')} — ${gunName}` } : null
+      }
+      const known = presetNameLookup?.[id]
+      return known ? { id, name: known.name } : null
+    })
+    .filter((e): e is { id: string; name: string } => e !== null)
 
   // The selected preset may be unavailable at the current trader/flea settings
   // (e.g. user tightened trader levels after picking it) — keep it visible in
@@ -162,6 +183,15 @@ export function WeaponSelector({
                 )
               }}
             />
+            {bannedBaseEntries.length > 0 && (
+              <Space wrap style={{ marginTop: 8 }}>
+                {bannedBaseEntries.map(({ id, name }) => (
+                  <Tag key={id} color="error" closable onClose={() => onToggleExcludeBase?.(id)}>
+                    {name}
+                  </Tag>
+                ))}
+              </Space>
+            )}
           </div>
         )}
       </Space>

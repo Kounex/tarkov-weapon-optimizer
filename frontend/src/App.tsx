@@ -897,6 +897,8 @@ function AppContent({
     excludedModIds,
     onIncludedModIdsChange: setIncludedModIds,
     onExcludedModIdsChange: setExcludedModIds,
+    excludedBaseIds: excludedModIds,
+    onToggleExcludeBase: toggleExclude,
     categorySearch,
     onCategorySearchChange: setCategorySearch,
     modSearch,

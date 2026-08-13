@@ -132,8 +132,10 @@ export function ModFilter({
               }}
             />
             <Space wrap>
-              {includedModIds.map(id => <Tag key={id} color="success" closable onClose={() => onIncludedModIdsChange(includedModIds.filter(i => i !== id))}>{availableMods.find(m => m.id === id)?.name}</Tag>)}
-              {excludedModIds.map(id => <Tag key={id} color="error" closable onClose={() => onExcludedModIdsChange(excludedModIds.filter(i => i !== id))}>{availableMods.find(m => m.id === id)?.name}</Tag>)}
+              {/* Banned bases (preset ids / a weapon's own id) share this same list but have no
+                  entry in availableMods — they're shown separately in WeaponSelector instead. */}
+              {includedModIds.filter(id => availableMods.some(m => m.id === id)).map(id => <Tag key={id} color="success" closable onClose={() => onIncludedModIdsChange(includedModIds.filter(i => i !== id))}>{availableMods.find(m => m.id === id)?.name}</Tag>)}
+              {excludedModIds.filter(id => availableMods.some(m => m.id === id)).map(id => <Tag key={id} color="error" closable onClose={() => onExcludedModIdsChange(excludedModIds.filter(i => i !== id))}>{availableMods.find(m => m.id === id)?.name}</Tag>)}
             </Space>
           </Space>
         ),
