@@ -1,6 +1,6 @@
 services:
   frontend:
-    image: ghcr.io/kounex/tarkov-optimizer-frontend:latest
+    image: ghcr.io/kounex/tarkov-optimizer-frontend:2.7.4
     restart: unless-stopped
     ports:
       - "8080:80"
@@ -14,7 +14,7 @@ services:
       retries: 3
 
   vision-proxy:
-    image: ghcr.io/kounex/tarkov-vision-proxy:latest
+    image: ghcr.io/kounex/tarkov-vision-proxy:2.7.4
     restart: unless-stopped
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
